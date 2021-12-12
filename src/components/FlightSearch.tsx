@@ -92,8 +92,8 @@ export const FlightSearch = () => {
         console.log('Origin code changed to', values.originLocationCode)
     }, [values.originLocationCode])
 
-    return (<Flex border="1px" borderRadius="md" maxW="md" flexWrap="wrap" flexDir="row" justify="center" align="center">
-        <Flex w="full">
+    return (<Flex border="1px" borderRadius="md" maxW="xl" flexWrap="wrap" flexDir="row" justify="center" align="center">
+        <Flex w="full" flexWrap="wrap">
             <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
                 <Combobox items={airportNames} selectedItem={values.originLocationCode} setSelectedItem={(item) => setFieldValue('originLocationCode', airports.find(x => x.label == item))} />
@@ -120,8 +120,8 @@ export const FlightSearch = () => {
         <Flex w="full">
             <FormControl isInvalid={getIsValid('adults')} isRequired p="3">
                 <FormLabel>{flightFormLabels.adults}</FormLabel>
-                <NumberInput {...getFieldProps('adults')} min={1} max={20}>
-                    <NumberInputField />
+                <NumberInput {...getFieldProps('adults')} onChange={val => setFieldValue('adults', val)} min={1} max={20}>
+                    <NumberInputField {...getFieldProps('adults')} />
                     <NumberInputStepper>
                         <NumberIncrementStepper />
                         <NumberDecrementStepper />
@@ -131,7 +131,7 @@ export const FlightSearch = () => {
             </FormControl>
             <FormControl isInvalid={getIsValid('children')} p="3">
                 <FormLabel>{flightFormLabels.children}</FormLabel>
-                <NumberInput {...getFieldProps('children')} min={1} max={20}>
+                <NumberInput {...getFieldProps('children')} onChange={val => setFieldValue('children', val)} min={1} max={20}>
                     <NumberInputField />
                     <NumberInputStepper>
                         <NumberIncrementStepper />
@@ -140,7 +140,7 @@ export const FlightSearch = () => {
                 </NumberInput>
                 <FormErrorMessage>{errors.children}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={getIsValid('infants')} p="3">
+            <FormControl isInvalid={getIsValid('infants')} onChange={val => setFieldValue('infants', val)} p="3">
                 <FormLabel>{flightFormLabels.infants}</FormLabel>
                 <NumberInput {...getFieldProps('infants')} min={1} max={20}>
                     <NumberInputField />
@@ -163,7 +163,7 @@ export const FlightSearch = () => {
                 </Select>
             </FormControl>
             <FormControl p="3" mt="8">
-                <Checkbox isChecked={values.nonStop}>{flightFormLabels.nonStop}</Checkbox>
+                <Checkbox {...getFieldProps('nonStop')}>{flightFormLabels.nonStop}</Checkbox>
                 <FormErrorMessage>{errors.nonStop}</FormErrorMessage>
             </FormControl>
         </Flex>
@@ -197,7 +197,7 @@ export const FlightSearch = () => {
         </Flex>
         <Flex w="full" justify="center" py="3">
             <Button colorScheme="green">
-                Flight me!
+                Gimme the goods
             </Button>
         </Flex>
     </Flex>)

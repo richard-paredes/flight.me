@@ -78,8 +78,8 @@ export const Combobox = ({ items, selectedItem, setSelectedItem }: ComboboxProps
     });
 
     return (
-        <Flex {...getComboboxProps()}>
-            <Flex direction="row" alignItems="center">
+        <Flex {...getComboboxProps()} position="relative">
+            <Flex direction="row" alignItems="center" w="full">
                 <ComboboxInput
                     {...getInputProps()}
                     placeholder="Search..."
@@ -101,8 +101,9 @@ export const Combobox = ({ items, selectedItem, setSelectedItem }: ComboboxProps
                 position="absolute"
                 zIndex={1000}
                 p="3"
-                minW="200px"
-                top="90px"
+                borderRadius="md"
+                top="45px"
+                w="full"
                 color="black"
                 bgColor="white"
             >
