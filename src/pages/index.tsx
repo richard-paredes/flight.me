@@ -1,14 +1,12 @@
-import { Flex, FormControl } from '@chakra-ui/react'
 import { Container } from '../components/Container'
 import { Navbar } from '../components/Navbar'
+import { FlightSearch } from '../components/FlightSearch'
 
 const Index = () => {
   return (<Container minH="100vh" overflowX="hidden">
     <Navbar />
-    <Container>
-      <FormControl>
-
-      </FormControl>
+    <Container flex="1" justifyContent="center">
+      <FlightSearch />
     </Container>
   </Container>
   )
