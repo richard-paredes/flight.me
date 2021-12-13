@@ -81,7 +81,7 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
 
     return (
         <Flex {...getComboboxProps()} position="relative">
-            <Flex direction="row" alignItems="center" w="xl">
+            <Flex direction="row" alignItems="center" w="full">
                 <ComboboxInput
                     {...getInputProps()}
                     placeholder="Search..."

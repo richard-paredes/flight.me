@@ -40,7 +40,7 @@ export const FlightSearch = () => {
         }
     }
 
-    return (<Flex border="1px" borderRadius="md" maxW="xl" flexWrap="wrap" flexDir="row" justify="center" align="center">
+    return (<Flex border="1px" borderRadius="md" maxW="lg" flexWrap="wrap" flexDir="row" justify="center" align="center">
         <Flex w="full" flexWrap="wrap">
             <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
