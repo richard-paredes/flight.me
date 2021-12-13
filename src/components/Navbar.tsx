@@ -2,7 +2,7 @@ import { Text } from '@chakra-ui/react'
 import { Container } from './Container'
 import { DarkModeSwitch } from './DarkModeSwitch'
 
-export const Navbar = (props) => {
+export const Navbar = () => {
     return <Container as="nav" w="100vw" position="sticky" top="0" flexDir="row" background="transparent" justifyContent="space-between" alignItems="flex-start" p="5" _before={{
         content: `''`,
         position: 'absolute',

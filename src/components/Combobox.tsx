@@ -1,9 +1,8 @@
-import React, { LegacyRef, RefObject, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCombobox } from "downshift";
-import { Input, List, ListItem, Flex, IconButton, ListItemProps, ComponentWithAs, ListProps, InputProps } from "@chakra-ui/react";
+import { Input, List, ListItem, Flex, IconButton, ListItemProps, ListProps, InputProps } from "@chakra-ui/react";
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
 
-//const items = ["Seattle", "San Francisco", "Springfield", "New York", "Boston"];
 export interface ComboboxItem {
     label: string;
     value: string;
