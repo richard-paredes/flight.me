@@ -41,20 +41,26 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
     }
 );
 
-interface ComboboxProps {
-    items: string[];
-    selectedItem?: string;
-    setSelectedItem: React.Dispatch<React.SetStateAction<string | undefined>>;
+interface ComboboxProps<T> {
+    items: T[];
+    selectedItem?: T;
+    labelBy: (item: T) => React.ReactNode;
+    filterBy: (input: string) => T[];
+    setSelectedItem: React.Dispatch<React.SetStateAction<T>>;
 }
 
 // TODO : fix so that the selectedItem.label is rendered but still allows user to change it
-export const Combobox = ({ items, selectedItem, setSelectedItem }: ComboboxProps) => {
-    const [inputItems, setInputItems] = useState([...items]);
+export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filterBy, setSelectedItem }: ComboboxProps<T>) => {
+    const [inputItems, setInputItems] = useState([]);
     const [item, setItem] = useState(selectedItem);
 
     useEffect(() => {
+        setInputItems(items);
+    }, [items]);
+    useEffect(() => {
         setSelectedItem(item);
-    }, [item])
+    }, [item]);
+
     const {
         isOpen,
         getToggleButtonProps,
@@ -66,20 +72,18 @@ export const Combobox = ({ items, selectedItem, setSelectedItem }: ComboboxProps
     } = useCombobox({
         items: inputItems,
         selectedItem: item,
-        onSelectedItemChange: ({ inputValue }) => {
-            setItem(inputValue)
+        onSelectedItemChange: ({ selectedItem }) => {
+            setItem(selectedItem)
         },
         onInputValueChange: ({ inputValue: input }) => {
-            setInputItems(items.filter((item) =>
-                item.toLowerCase().includes(input.toLowerCase())
-            ))
+            setInputItems(filterBy(input))
         }
 
     });
 
     return (
         <Flex {...getComboboxProps()} position="relative">
-            <Flex direction="row" alignItems="center" w="full">
+            <Flex direction="row" alignItems="center" w="xl">
                 <ComboboxInput
                     {...getInputProps()}
                     placeholder="Search..."
@@ -90,34 +94,34 @@ export const Combobox = ({ items, selectedItem, setSelectedItem }: ComboboxProps
                     variantColor={isOpen ? "gray" : "teal"}
                     icon={isOpen ? <ArrowUpIcon /> : <ArrowDownIcon />}
                 />
+                <ComboboxList
+                    isOpen={isOpen}
+                    {...getMenuProps()}
+                    maxH="180px"
+                    overflowY="auto"
+                    margin="0"
+                    borderTop="0"
+                    position="absolute"
+                    zIndex={1000}
+                    p="3"
+                    borderRadius="md"
+                    top="45px"
+                    w="full"
+                    color="black"
+                    bgColor="white"
+                >
+                    {inputItems.map((item, index) => (
+                        <ComboboxItem
+                            {...getItemProps({ item, index })}
+                            itemIndex={index}
+                            highlightedIndex={highlightedIndex}
+                            key={index}
+                        >
+                            {labelBy(item)}
+                        </ComboboxItem>
+                    ))}
+                </ComboboxList>
             </Flex>
-            <ComboboxList
-                isOpen={isOpen}
-                {...getMenuProps()}
-                maxH="180px"
-                overflowY="auto"
-                margin="0"
-                borderTop="0"
-                position="absolute"
-                zIndex={1000}
-                p="3"
-                borderRadius="md"
-                top="45px"
-                w="full"
-                color="black"
-                bgColor="white"
-            >
-                {inputItems.map((item, index) => (
-                    <ComboboxItem
-                        {...getItemProps({ item, index })}
-                        itemIndex={index}
-                        highlightedIndex={highlightedIndex}
-                        key={index}
-                    >
-                        {item}
-                    </ComboboxItem>
-                ))}
-            </ComboboxList>
         </Flex>
 
     );

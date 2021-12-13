@@ -1,26 +1,15 @@
 import { Button, Checkbox, Flex, FormControl, FormErrorMessage, FormLabel, Input, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, RangeSlider, Select, Slider, SliderFilledTrack, SliderThumb, SliderTrack } from '@chakra-ui/react';
 import { useFormik } from 'formik';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Airport } from '../pages/api/airports';
+import { ApiResponse } from '../types/ApiResponse';
 import { Combobox, ComboboxItem } from './Combobox';
 
-const airports: ComboboxItem[] = [
-    {
-        label: 'Klana, AK',
-        value: 'IAN'
-    }, {
-        label: 'Miami, FL - International',
-        value: 'MIA'
-    }, {
-        label: 'Miami, FL - Sea Plane Base',
-        value: 'MPB'
-    }]; // pull these from somewhere!
-const airportNames = airports.map(x => x.label);
-const airportCodes = airports.map(x => x.value);
-const getSelectedAirport = (airportCode: string) => {
-    return airports.find(x => x.value === airportCode);
-}
 type TravelClass = "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
-
+function getAirportLabel(airport: Airport) {
+    if (airport.state) return `${airport.city}, ${airport.state} - ${airport.country} | ${airport.id.toUpperCase()}`;
+    return `${airport.city} - ${airport.country} | ${airport.id.toUpperCase()}`;
+}
 interface FlightFormValues {
     originLocationCode: string;
     destinationLocationCode: string;
@@ -74,6 +63,7 @@ const flightFormLabels: Stringified<Required<FlightFormValues>> = {
 }
 
 export const FlightSearch = () => {
+    const [airports, setAirports] = useState<Airport[]>([]);
     const handleSubmit = () => {
 
     }
@@ -89,19 +79,39 @@ export const FlightSearch = () => {
     }
 
     useEffect(() => {
-        console.log('Origin code changed to', values.originLocationCode)
-    }, [values.originLocationCode])
+        const fetchAirports = async () => {
+            const response = await fetch('/api/airports');
+
+            const data: Airport[] = await response.json();
+            if (data) {
+                setAirports(data);
+            }
+        }
+        fetchAirports();
+    }, []);
+
+    const filterAirports = (input: string) => {
+        return airports.filter(x => getAirportLabel(x).toLowerCase().includes(input.toLowerCase()));
+    }
+    const getSelectedAirport = (airportId: string) => {
+        return airports.find(x => airportId === x.id);
+    }
+    const setSelectedAirport = (airport: Airport | undefined) => {
+        if (airport) {
+            setFieldValue('originLocationCode', airport.id);
+        }
+    }
 
     return (<Flex border="1px" borderRadius="md" maxW="xl" flexWrap="wrap" flexDir="row" justify="center" align="center">
         <Flex w="full" flexWrap="wrap">
             <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                <Combobox items={airportNames} selectedItem={values.originLocationCode} setSelectedItem={(item) => setFieldValue('originLocationCode', airports.find(x => x.label == item))} />
+                <Combobox items={airports} labelBy={getAirportLabel} filterBy={filterAirports} selectedItem={getSelectedAirport(values.originLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
             </FormControl>
             <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                <Combobox items={airportNames} selectedItem={values.destinationLocationCode} setSelectedItem={(item) => setFieldValue('originLocationCode', airports.find(x => x.label == item))} />
+                <Combobox items={airports} labelBy={getAirportLabel} filterBy={filterAirports} selectedItem={getSelectedAirport(values.destinationLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.destinationLocationCode}</FormErrorMessage>
             </FormControl>
         </Flex>
