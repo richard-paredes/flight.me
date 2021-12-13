@@ -2,65 +2,12 @@ import { Button, Checkbox, Flex, FormControl, FormErrorMessage, FormLabel, Input
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Airport } from '../pages/api/airports';
-import { ApiResponse } from '../types/ApiResponse';
-import { Combobox, ComboboxItem } from './Combobox';
+import { Combobox } from './Combobox';
+import FlightSearchService from '../services/FlightSearchService';
+import { FlightFormValues } from '../types/FlightSearch';
 
-type TravelClass = "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
-function getAirportLabel(airport: Airport) {
-    if (airport.state) return `${airport.city}, ${airport.state} - ${airport.country} | ${airport.id.toUpperCase()}`;
-    return `${airport.city} - ${airport.country} | ${airport.id.toUpperCase()}`;
-}
-interface FlightFormValues {
-    originLocationCode: string;
-    destinationLocationCode: string;
-    departureDate: Date;
-    returnDate: Date;
-    adults: number;
-    children?: number;
-    infants?: number;
-    travelClass: TravelClass;
-    includedAirlineCodes?: string[];
-    excludedAirlineCodes?: string[];
-    nonStop: boolean;
-    currencyCode: string;
-    maxPrice?: number;
-    max?: number;
-}
-
-type Stringified<T extends object> = {
-    [K in keyof T]: string;
-}
-const today = new Date();
-
-const defaultFlightFormValues: FlightFormValues = {
-    originLocationCode: '',
-    destinationLocationCode: '',
-    departureDate: new Date(today),
-    returnDate: new Date(today.getDate() + 1),
-    travelClass: 'ECONOMY',
-    adults: 1,
-    children: 0,
-    infants: 0,
-    nonStop: false,
-    currencyCode: 'USD',
-    maxPrice: 150
-}
-const flightFormLabels: Stringified<Required<FlightFormValues>> = {
-    originLocationCode: "Origin",
-    destinationLocationCode: "Destination",
-    departureDate: "Departure",
-    returnDate: "Return",
-    adults: "Adults",
-    children: "Children",
-    infants: "Infants",
-    travelClass: "Travel Class",
-    includedAirlineCodes: undefined,
-    excludedAirlineCodes: undefined,
-    nonStop: "Non-stop",
-    currencyCode: "Currency",
-    maxPrice: "Max Price",
-    max: undefined
-}
+const flightFormLabels = FlightSearchService.getFlightFormLabels();
+const travelClasses = FlightSearchService.getTravelClasses();
 
 export const FlightSearch = () => {
     const [airports, setAirports] = useState<Airport[]>([]);
@@ -68,7 +15,7 @@ export const FlightSearch = () => {
 
     }
     const { values, errors, touched, getFieldProps: getFormikFieldProps, setFieldValue } = useFormik({
-        initialValues: defaultFlightFormValues,
+        initialValues: FlightSearchService.getDefaultFormValues(),
         onSubmit: handleSubmit
     });
     const getFieldProps = (formKey: keyof FlightFormValues) => {
@@ -79,23 +26,14 @@ export const FlightSearch = () => {
     }
 
     useEffect(() => {
-        const fetchAirports = async () => {
-            const response = await fetch('/api/airports');
-
-            const data: Airport[] = await response.json();
-            if (data) {
-                setAirports(data);
-            }
+        const fetchAndSetAirports = async () => {
+            const data = await FlightSearchService.fetchAirports();
+            setAirports(data);
         }
-        fetchAirports();
+        fetchAndSetAirports();
     }, []);
 
-    const filterAirports = (input: string) => {
-        return airports.filter(x => getAirportLabel(x).toLowerCase().includes(input.toLowerCase()));
-    }
-    const getSelectedAirport = (airportId: string) => {
-        return airports.find(x => airportId === x.id);
-    }
+
     const setSelectedAirport = (airport: Airport | undefined) => {
         if (airport) {
             setFieldValue('originLocationCode', airport.id);
@@ -106,12 +44,12 @@ export const FlightSearch = () => {
         <Flex w="full" flexWrap="wrap">
             <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                <Combobox items={airports} labelBy={getAirportLabel} filterBy={filterAirports} selectedItem={getSelectedAirport(values.originLocationCode)} setSelectedItem={setSelectedAirport} />
+                <Combobox items={airports} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.originLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
             </FormControl>
             <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                <Combobox items={airports} labelBy={getAirportLabel} filterBy={filterAirports} selectedItem={getSelectedAirport(values.destinationLocationCode)} setSelectedItem={setSelectedAirport} />
+                <Combobox items={airports} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.destinationLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.destinationLocationCode}</FormErrorMessage>
             </FormControl>
         </Flex>
@@ -123,7 +61,7 @@ export const FlightSearch = () => {
             </FormControl>
             <FormControl isInvalid={getIsValid('returnDate')} isRequired p="3">
                 <FormLabel>{flightFormLabels.returnDate}</FormLabel>
-                <Input {...getFieldProps('returnDate')} type="date" />
+                <Input {...getFieldProps('returnDate')} type="date" min={values.departureDate.toLocaleDateString('en-CA')} />
                 <FormErrorMessage>{errors.returnDate}</FormErrorMessage>
             </FormControl>
         </Flex>
@@ -166,10 +104,7 @@ export const FlightSearch = () => {
             <FormControl p="3">
                 <FormLabel>{flightFormLabels.travelClass}</FormLabel>
                 <Select {...getFieldProps('travelClass')}>
-                    <option value="ECONOMY">Economy</option>
-                    <option value="PREMIUM_ECONOMY">Premium Economy</option>
-                    <option value="BUSINESS">Business</option>
-                    <option value="FIRST">First</option>
+                    {travelClasses.map(opt => <option value={opt.value} key={opt.value}>{opt.label}</option>)}
                 </Select>
             </FormControl>
             <FormControl p="3" mt="8">

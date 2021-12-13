@@ -44,12 +44,11 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 interface ComboboxProps<T> {
     items: T[];
     selectedItem?: T;
-    labelBy: (item: T) => React.ReactNode;
-    filterBy: (input: string) => T[];
+    labelBy: (item: T) => string;
+    filterBy: (items: T[], input: string) => T[];
     setSelectedItem: React.Dispatch<React.SetStateAction<T>>;
 }
 
-// TODO : fix so that the selectedItem.label is rendered but still allows user to change it
 export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filterBy, setSelectedItem }: ComboboxProps<T>) => {
     const [inputItems, setInputItems] = useState([]);
     const [item, setItem] = useState(selectedItem);
@@ -75,10 +74,10 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
         onSelectedItemChange: ({ selectedItem }) => {
             setItem(selectedItem)
         },
-        onInputValueChange: ({ inputValue: input }) => {
-            setInputItems(filterBy(input))
-        }
-
+        onInputValueChange: (values) => {
+            setInputItems(filterBy(items, values.inputValue))
+        },
+        itemToString: labelBy
     });
 
     return (
