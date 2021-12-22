@@ -44,12 +44,12 @@ export const FlightSearch = () => {
         <Flex w="full" flexWrap="wrap">
             <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                <Combobox items={airports} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.originLocationCode)} setSelectedItem={setSelectedAirport} />
+                <Combobox items={airports} itemToString={FlightSearchService.getAirportAsString} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.originLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
             </FormControl>
             <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
                 <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                <Combobox items={airports} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.destinationLocationCode)} setSelectedItem={setSelectedAirport} />
+                <Combobox items={airports} itemToString={FlightSearchService.getAirportAsString} labelBy={FlightSearchService.getAirportLabel} filterBy={FlightSearchService.filterAirports} selectedItem={FlightSearchService.getAirport(airports, values.destinationLocationCode)} setSelectedItem={setSelectedAirport} />
                 <FormErrorMessage>{errors.destinationLocationCode}</FormErrorMessage>
             </FormControl>
         </Flex>

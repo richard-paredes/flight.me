@@ -8,9 +8,8 @@ export interface ComboboxItem {
     value: string;
 }
 const ComboboxInput = React.forwardRef<HTMLInputElement, InputProps & { value?: ComboboxItem }>(
-    (props, ref) => {
-        return (<Input {...props} ref={ref} />)
-    }
+    (props, ref) => (<Input {...props} ref={ref} />)
+
 );
 
 const ComboboxList = React.forwardRef<HTMLUListElement, {
@@ -20,35 +19,31 @@ const ComboboxList = React.forwardRef<HTMLUListElement, {
 );
 
 const ComboboxItem = React.forwardRef<HTMLLIElement, {
-    itemIndex: number;
-    highlightedIndex: number;
+    isActive: boolean;
 } & ListItemProps>(
-    ({ itemIndex, highlightedIndex, ...props }, ref) => {
-        const isActive = itemIndex === highlightedIndex;
+    ({ isActive, ...props }, ref) =>
+        <ListItem
+            transition="background-color 220ms, color 220ms"
+            bg={isActive ? "green.300" : null}
+            px={4}
+            py={2}
+            cursor="pointer"
+            {...props}
+            ref={ref}
+        />
 
-        return (
-            <ListItem
-                transition="background-color 220ms, color 220ms"
-                bg={isActive ? "green.300" : null}
-                px={4}
-                py={2}
-                cursor="pointer"
-                {...props}
-                ref={ref}
-            />
-        );
-    }
 );
 
 interface ComboboxProps<T> {
     items: T[];
     selectedItem?: T;
-    labelBy: (item: T) => string;
+    labelBy: (item: T) => React.ReactNode;
     filterBy: (items: T[], input: string) => T[];
+    itemToString: (item: T) => string;
     setSelectedItem: React.Dispatch<React.SetStateAction<T>>;
 }
 
-export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filterBy, setSelectedItem }: ComboboxProps<T>) => {
+export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filterBy, itemToString, setSelectedItem }: ComboboxProps<T>) => {
     const [inputItems, setInputItems] = useState([]);
     const [item, setItem] = useState(selectedItem);
 
@@ -76,7 +71,7 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
         onInputValueChange: (values) => {
             setInputItems(filterBy(items, values.inputValue))
         },
-        itemToString: labelBy
+        itemToString: itemToString
     });
 
     return (
@@ -89,7 +84,7 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
                 <IconButton
                     {...getToggleButtonProps()}
                     aria-label={"toggle menu"}
-                    variantColor={isOpen ? "gray" : "teal"}
+                    colorScheme="green"
                     icon={isOpen ? <ArrowUpIcon /> : <ArrowDownIcon />}
                 />
                 <ComboboxList
@@ -111,8 +106,7 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
                     {inputItems.map((item, index) => (
                         <ComboboxItem
                             {...getItemProps({ item, index })}
-                            itemIndex={index}
-                            highlightedIndex={highlightedIndex}
+                            isActive={index === highlightedIndex}
                             key={index}
                         >
                             {labelBy(item)}
