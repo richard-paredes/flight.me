@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useCombobox } from "downshift";
+import React from 'react';
+import { useCombobox, UseComboboxProps } from "downshift";
 import { Input, List, ListItem, Flex, IconButton, ListItemProps, ListProps, InputProps } from "@chakra-ui/react";
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
 
@@ -9,7 +9,6 @@ export interface ComboboxItem {
 }
 const ComboboxInput = React.forwardRef<HTMLInputElement, InputProps & { value?: ComboboxItem }>(
     (props, ref) => (<Input {...props} ref={ref} />)
-
 );
 
 const ComboboxList = React.forwardRef<HTMLUListElement, {
@@ -24,7 +23,7 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
     ({ isActive, ...props }, ref) =>
         <ListItem
             transition="background-color 220ms, color 220ms"
-            bg={isActive ? "green.300" : null}
+            bg={isActive ? "green.100" : null}
             px={4}
             py={2}
             cursor="pointer"
@@ -34,26 +33,11 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 
 );
 
-interface ComboboxProps<T> {
-    items: T[];
-    selectedItem?: T;
-    labelBy: (item: T) => React.ReactNode;
-    filterBy: (items: T[], input: string) => T[];
-    itemToString: (item: T) => string;
-    setSelectedItem: React.Dispatch<React.SetStateAction<T>>;
+interface ComboboxProps<T> extends UseComboboxProps<T> {
+
 }
 
-export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filterBy, itemToString, setSelectedItem }: ComboboxProps<T>) => {
-    const [inputItems, setInputItems] = useState([]);
-    const [item, setItem] = useState(selectedItem);
-
-    useEffect(() => {
-        setInputItems(items);
-    }, [items]);
-    useEffect(() => {
-        setSelectedItem(item);
-    }, [item]);
-
+export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
     const {
         isOpen,
         getToggleButtonProps,
@@ -62,17 +46,7 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
         getComboboxProps,
         highlightedIndex,
         getItemProps
-    } = useCombobox({
-        items: inputItems,
-        selectedItem: item,
-        onSelectedItemChange: ({ selectedItem }) => {
-            setItem(selectedItem)
-        },
-        onInputValueChange: (values) => {
-            setInputItems(filterBy(items, values.inputValue))
-        },
-        itemToString: itemToString
-    });
+    } = useCombobox({...props});
 
     return (
         <Flex {...getComboboxProps()} position="relative">
@@ -103,13 +77,13 @@ export const Combobox = <T extends unknown>({ items, selectedItem, labelBy, filt
                     color="black"
                     bgColor="white"
                 >
-                    {inputItems.map((item, index) => (
+                    {props.items.map((item, index) => (
                         <ComboboxItem
                             {...getItemProps({ item, index })}
                             isActive={index === highlightedIndex}
                             key={index}
                         >
-                            {labelBy(item)}
+                            {props.itemToString(item)}
                         </ComboboxItem>
                     ))}
                 </ComboboxList>

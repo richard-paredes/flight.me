@@ -1,8 +1,8 @@
-import { Flex, Text } from '@chakra-ui/react';
 import React from 'react';
 
 import { Airport } from "../pages/api/airports";
 import { Stringified } from "../types";
+import { DropdownOption } from '../components/AirportDropdownOption';
 import { FlightFormValues, TravelClassOption } from "../types/FlightSearch";
 
 interface IFlightSearchService {
@@ -11,7 +11,8 @@ interface IFlightSearchService {
     getDefaultFormValues: () => FlightFormValues;
     getFlightFormLabels: () => Stringified<Required<FlightFormValues>>;
     getAirportAsString: (airport: Airport) => string;
-    fetchAirports: () => Promise<Airport[]>;
+    fetchAirports: (search: string) => Promise<Airport[]>;
+    submitSearch: (form: FlightFormValues) => Promise<any[]>;
 }
 
 class FlightSearchService implements IFlightSearchService {
@@ -34,22 +35,24 @@ class FlightSearchService implements IFlightSearchService {
             value: "FIRST"
         }] as TravelClassOption[];
     };
-    isSearchedBy = (airport: Airport, input: string) => {
-    };
     getDefaultFormValues = () => {
         const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
         const defaultValues: FlightFormValues = {
             originLocationCode: '',
             destinationLocationCode: '',
-            departureDate: new Date(today),
-            returnDate: new Date(today.getDate() + 1),
+            departureDate: today.toLocaleDateString('en-CA'),
+            returnDate: tomorrow.toLocaleDateString('en-CA'),
             travelClass: 'ECONOMY',
             adults: 1,
             children: 0,
             infants: 0,
             nonStop: false,
             currencyCode: 'USD',
-            maxPrice: 150
+            maxPrice: 150,
+            max: 10
         };
         return defaultValues;
     };
@@ -72,20 +75,11 @@ class FlightSearchService implements IFlightSearchService {
         }
         return flightFormLabels;
     };
-    fetchAirports = async () => {
-        const response = await fetch('/api/airports');
-        const data: Airport[] = await response.json();
-        return data;
-    };
     getAirportLabel = (airport: Airport) => {
-        if (airport.state) return <Flex flexDir="column">
-            <Text>{airport.city}, {airport.state} - {airport.country}</Text>
-            <Text fontSize="xs">{airport.name} ({airport.id.toUpperCase()})</Text>
-        </Flex>;
-        return <Flex flexDir="column">
-            <Text>{airport.city} - {airport.country}</Text>
-            <Text fontSize="xs">{airport.name} ({airport.id.toUpperCase()})</Text>
-        </Flex>;
+        const name = this.getAirportAsString(airport);
+        const sublabel = `${airport.name} (${airport.id.toUpperCase()})`;
+
+        return <DropdownOption name={name} sublabel={sublabel} />;
     };
     getAirportAsString = (airport: Airport) => {
         if (airport.state) return `${airport.city}, ${airport.state} (${airport.id.toUpperCase()})`;
@@ -96,6 +90,16 @@ class FlightSearchService implements IFlightSearchService {
     };
     getAirport = (airports: Airport[], airportId: string) => {
         return airports.find(x => airportId === x.id);
+    };
+    fetchAirports = async (search: string) => {
+        const response = await fetch('/api/airports?search=' + encodeURIComponent(search));
+        const data: Airport[] = await response.json();
+        return data;
+    };
+    submitSearch = async (form: FlightFormValues) => {
+        const response = await fetch('/api/flights', { method: 'POST', body: JSON.stringify(form) });
+        const data: any[] = await response.json();
+        return data;
     };
 }
 

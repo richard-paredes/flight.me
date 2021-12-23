@@ -8,11 +8,11 @@ export interface TravelClassOption {
 export interface FlightFormValues {
     originLocationCode: string;
     destinationLocationCode: string;
-    departureDate: Date;
-    returnDate: Date;
+    departureDate: string;
+    returnDate: string;
     adults: number;
-    children?: number;
-    infants?: number;
+    children: number;
+    infants: number;
     travelClass: TravelClass;
     includedAirlineCodes?: string[];
     excludedAirlineCodes?: string[];
