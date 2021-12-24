@@ -38,7 +38,9 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                 <Flex w="full" flexWrap="wrap">
                     <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                         <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                        <Combobox items={fromAirports}
+                        <Combobox 
+                            placeholder='Origin city'
+                            items={fromAirports}
                             toDropdownOption={FlightSearchService.locationToLabel} 
                             onInputValueChange={(changes) => { 
                                 clearTimeout(fromSearchTimeout);
@@ -47,13 +49,16 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                                     setFromAirports(airports);
                                 }, 1000);
                             }}
+                            
                             itemToString={FlightSearchService.locationToString}
                         />
                         <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
                     </FormControl>
                     <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
                         <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                        <Combobox items={toAirports} 
+                        <Combobox 
+                            placeholder='Destination city'
+                            items={toAirports} 
                             toDropdownOption={FlightSearchService.locationToLabel}
                             onInputValueChange={(changes) => { 
                                 clearTimeout(toSearchTimeout);

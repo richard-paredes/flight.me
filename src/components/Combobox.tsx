@@ -35,25 +35,45 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 
 interface ComboboxProps<T> extends UseComboboxProps<T> {
     toDropdownOption: (item: T) => React.ReactNode;
+    placeholder?: string;
 }
 
 export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
     const {
         isOpen,
+        inputValue,
         getToggleButtonProps,
         getMenuProps,
         getInputProps,
         getComboboxProps,
         highlightedIndex,
-        getItemProps
+        getItemProps,
     } = useCombobox({...props});
+
+    function renderDropdownResults() {
+        if (!inputValue) {
+            return <div>Start typing to search</div>
+        }
+        if (!props.items.length) {
+            return <div>No results found</div>
+        }
+        return props.items.map((item, index) => (
+            <ComboboxItem
+                {...getItemProps({ item, index })}
+                isActive={index === highlightedIndex}
+                key={index}
+            >
+                {props.toDropdownOption(item)}
+            </ComboboxItem>
+        ))
+    }
 
     return (
         <Flex {...getComboboxProps()} position="relative">
             <Flex direction="row" alignItems="center" w="full">
                 <ComboboxInput
                     {...getInputProps()}
-                    placeholder="Search..."
+                    placeholder={props.placeholder}
                 />
                 <IconButton
                     {...getToggleButtonProps()}
@@ -77,15 +97,7 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
                     color="black"
                     bgColor="white"
                 >
-                    {props.items.map((item, index) => (
-                        <ComboboxItem
-                            {...getItemProps({ item, index })}
-                            isActive={index === highlightedIndex}
-                            key={index}
-                        >
-                            {props.toDropdownOption(item)}
-                        </ComboboxItem>
-                    ))}
+                  {renderDropdownResults()}  
                 </ComboboxList>
             </Flex>
         </Flex>
