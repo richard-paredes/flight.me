@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FieldInputProps, FormikErrors, FormikTouched } from 'formik';
 import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button, Box } from '@chakra-ui/react';
 
 import { Combobox } from './Combobox';
 
-import { Airport } from '../pages/api/airports';
+import { LocationDto } from '../pages/api/airports';
 import { FlightFormValues } from '../types/FlightSearch';
 import FlightSearchService from '../services/FlightSearchService';
 
@@ -25,8 +25,8 @@ let fromSearchTimeout: NodeJS.Timeout;
 let toSearchTimeout: NodeJS.Timeout;
 
 export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, errors, touched, isSubmitting, getFieldProps, setFieldValue, submitForm }) => {
-    const [fromAirports, setFromAirports] = useState<Airport[]>([]);
-    const [toAirports, setToAirports] = useState<Airport[]>([]);
+    const [fromAirports, setFromAirports] = useState<LocationDto[]>([]);
+    const [toAirports, setToAirports] = useState<LocationDto[]>([]);
 
     const getIsValid = (formKey: keyof FlightFormValues) => {
         return !!errors[formKey] && !!touched[formKey]
@@ -38,24 +38,32 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                 <Flex w="full" flexWrap="wrap">
                     <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
                         <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                        <Combobox items={fromAirports} onInputValueChange={(changes) => { 
-                            clearTimeout(fromSearchTimeout);
-                            fromSearchTimeout = setTimeout(async () => {
-                                const airports = await FlightSearchService.fetchAirports(changes.inputValue);
-                                setFromAirports(airports);
-                            }, 1000);
-                        }} />
+                        <Combobox items={fromAirports}
+                            toDropdownOption={FlightSearchService.locationToLabel} 
+                            onInputValueChange={(changes) => { 
+                                clearTimeout(fromSearchTimeout);
+                                fromSearchTimeout = setTimeout(async () => {
+                                    const airports = await FlightSearchService.fetchLocations(changes.inputValue);
+                                    setFromAirports(airports);
+                                }, 1000);
+                            }}
+                            itemToString={FlightSearchService.locationToString}
+                        />
                         <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
                     </FormControl>
                     <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
                         <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                        <Combobox items={toAirports} onInputValueChange={(changes) => { 
-                            clearTimeout(toSearchTimeout);
-                            toSearchTimeout = setTimeout(async () => {
-                                const airports = await FlightSearchService.fetchAirports(changes.inputValue);
-                                setToAirports(airports);
-                            }, 1000);
-                        }}/>
+                        <Combobox items={toAirports} 
+                            toDropdownOption={FlightSearchService.locationToLabel}
+                            onInputValueChange={(changes) => { 
+                                clearTimeout(toSearchTimeout);
+                                toSearchTimeout = setTimeout(async () => {
+                                    const airports = await FlightSearchService.fetchLocations(changes.inputValue);
+                                    setToAirports(airports);
+                                }, 1000);
+                            }}
+                            itemToString={FlightSearchService.locationToString}
+                            />
                         <FormErrorMessage>{errors.destinationLocationCode}</FormErrorMessage>
                     </FormControl>
                 </Flex>

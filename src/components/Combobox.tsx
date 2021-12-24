@@ -34,7 +34,7 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 );
 
 interface ComboboxProps<T> extends UseComboboxProps<T> {
-
+    toDropdownOption: (item: T) => React.ReactNode;
 }
 
 export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
@@ -83,7 +83,7 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
                             isActive={index === highlightedIndex}
                             key={index}
                         >
-                            {props.itemToString(item)}
+                            {props.toDropdownOption(item)}
                         </ComboboxItem>
                     ))}
                 </ComboboxList>

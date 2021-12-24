@@ -1,22 +1,22 @@
 import React from 'react';
 
-import { Airport } from "../pages/api/airports";
+import { LocationDto } from "../pages/api/airports";
 import { Stringified } from "../types";
 import { DropdownOption } from '../components/AirportDropdownOption';
 import { FlightFormValues, TravelClassOption } from "../types/FlightSearch";
 
 interface IFlightSearchService {
     getTravelClasses: () => TravelClassOption[];
-    getAirportLabel: (airport: Airport) => React.ReactNode;
+    locationToLabel: (airport: LocationDto) => React.ReactNode;
     getDefaultFormValues: () => FlightFormValues;
     getFlightFormLabels: () => Stringified<Required<FlightFormValues>>;
-    getAirportAsString: (airport: Airport) => string;
-    fetchAirports: (search: string) => Promise<Airport[]>;
+    locationToString: (airport: LocationDto) => string;
+    fetchLocations: (search: string) => Promise<LocationDto[]>;
     submitSearch: (form: FlightFormValues) => Promise<any[]>;
 }
 
 class FlightSearchService implements IFlightSearchService {
-    searchableFields: (keyof Airport)[] = ['id', 'city', 'country', 'city2', 'state', 'stateShort'];
+    searchableFields: (keyof LocationDto)[] = ['id'];
     getTravelClasses = () => {
         return [{
             label: "Economy",
@@ -75,25 +75,21 @@ class FlightSearchService implements IFlightSearchService {
         }
         return flightFormLabels;
     };
-    getAirportLabel = (airport: Airport) => {
-        const name = this.getAirportAsString(airport);
-        const sublabel = `${airport.name} (${airport.id.toUpperCase()})`;
+    locationToLabel = (location: LocationDto) => {
+        const name = this.locationToString(location);
+        const sublabel = location.stateName ? `${location.stateName}, ${location.countryName}` 
+            : location.countryName;
 
         return <DropdownOption name={name} sublabel={sublabel} />;
     };
-    getAirportAsString = (airport: Airport) => {
-        if (airport.state) return `${airport.city}, ${airport.state} (${airport.id.toUpperCase()})`;
-        return `${airport.city} - ${airport.country} (${airport.id.toUpperCase()})`;
+    locationToString = (location: LocationDto) => {
+        return location.name;
     };
-    filterAirports = (airports: Airport[], input: string) => {
-        return airports.filter(airport => this.searchableFields.some(field => airport[field]?.toLowerCase().includes(input.toLowerCase())));
-    };
-    getAirport = (airports: Airport[], airportId: string) => {
-        return airports.find(x => airportId === x.id);
-    };
-    fetchAirports = async (search: string) => {
+    fetchLocations = async (search: string) => {
+        if (!search) return [];
+
         const response = await fetch('/api/airports?search=' + encodeURIComponent(search));
-        const data: Airport[] = await response.json();
+        const data: LocationDto[] = await response.json();
         return data;
     };
     submitSearch = async (form: FlightFormValues) => {

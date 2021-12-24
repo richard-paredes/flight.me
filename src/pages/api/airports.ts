@@ -1,30 +1,34 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { KiwiApi } from '../../services/KiwiApiClient';
+import { IKiwiApi, KiwiApi } from '../../services/KiwiApiClient';
 
-export interface Airport {
+const kiwiApi: IKiwiApi = new KiwiApi(process.env.KIWI_API_URL, process.env.KIWI_API_TOKEN);
+
+export type LocationDto = {
     id: string;
     name: string;
-    city: string;
-    city2?: string;
-    state?: string;
-    stateShort?: string;
-    country: string;
-    description: string;
-    imageCredit: string;
-    imageCreditLink?: string;
-}
-
-const kiwiApi = new KiwiApi(process.env.KIWI_API_URL, process.env.KIWI_API_TOKEN);
+    stateName?: string;
+    countryName: string;
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const searchTerm = req.query.search.toString();
-    const results = await kiwiApi.locations.query({
+
+    const response = await kiwiApi.locations.query({
         term: searchTerm,
-        location_types: ['airport', 'city', 'country'],
+        location_types: ['city'],
         limit: 50,
-        active_only: true,
-        sort: 'name'
+        active_only: true
     });
 
-    res.status(200).json(results);
-}
+    const locationDtos = response.locations.map(x => {
+        const dto: LocationDto = {
+            id: x.id,
+            name: x.name,
+            stateName: x.subdivision?.name,
+            countryName: x.country.name
+        };
+        return dto;
+    });
+
+    res.status(200).json(locationDtos);
+};
