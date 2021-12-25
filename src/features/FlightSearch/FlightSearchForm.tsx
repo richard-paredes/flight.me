@@ -7,6 +7,7 @@ import { Combobox } from '../../components/Combobox';
 import { LocationDto } from '../../pages/api/locations';
 import { FlightFormValues } from '../../types/FlightSearch';
 import FlightSearchService from '../../services/FlightSearchService';
+import { UseComboboxStateChange } from 'downshift';
 
 interface FlightSearchFormProps extends FormikProps<FlightFormValues> {
     getFieldProps: (field: keyof FlightFormValues) => FieldInputProps<any>;
@@ -17,17 +18,30 @@ interface FlightSearchFormProps extends FormikProps<FlightFormValues> {
 const flightFormLabels = FlightSearchService.getFlightFormLabels();
 const travelClasses = FlightSearchService.getTravelClasses();
 
-let fromSearchTimeout: NodeJS.Timeout;
-let toSearchTimeout: NodeJS.Timeout;
+const searchTimeouts = {
+    fly_from: null,
+    fly_to: null
+};
 
 export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, errors, touched, isSubmitting, setFieldTouched, getFieldProps, setFieldValue }) => {
-    const [fromAirports, setFromAirports] = useState<LocationDto[]>([]);
-    const [toAirports, setToAirports] = useState<LocationDto[]>([]);
-
-    useEffect(() => { console.log(touched) }, [touched])
+    const [locationSearch, setLocationSearch] = useState({
+        fly_from: [],
+        fly_to: []
+    });
     const getIsValid = (formKey: keyof FlightFormValues) => {
         return !!errors[formKey] && touched[formKey];
+    };
+    const setLocations = (field: keyof FlightFormValues, { inputValue, selectedItem }: UseComboboxStateChange<LocationDto>) => {
+        if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
+        if (values[field]) setFieldValue(field, '');
+        
+        clearTimeout(searchTimeouts[field]);
+        searchTimeouts[field] = setTimeout(async () => {
+            const airports = await FlightSearchService.fetchLocations(inputValue);
+            setLocationSearch(prev => ({...prev, [field]: airports}));
+        }, 450);
     }
+
 
     return (
         <Form>
@@ -38,23 +52,10 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         <Combobox
                             {...getFieldProps('fly_from')}
                             placeholder='Origin city'
-                            items={fromAirports}
+                            items={locationSearch.fly_from}
                             toDropdownOption={FlightSearchService.locationToLabel}
                             onBlur={() => setFieldTouched('fly_from')}
-                            onInputValueChange={({ inputValue, selectedItem }) => {
-                                if (inputValue === FlightSearchService.locationToString(selectedItem)) {
-                                    setFieldValue('fly_from', selectedItem?.id);
-                                    return;
-                                }
-
-                                if (values.fly_from) setFieldValue('fly_from', '');
-
-                                clearTimeout(fromSearchTimeout);
-                                fromSearchTimeout = setTimeout(async () => {
-                                    const airports = await FlightSearchService.fetchLocations(inputValue);
-                                    setFromAirports(airports);
-                                }, 450);
-                            }}
+                            onInputValueChange={changes => setLocations('fly_from', changes)}
                             onSelectedItemChange={({ selectedItem }) => setFieldValue('fly_from', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
                         />
@@ -64,24 +65,11 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         <FormLabel>{flightFormLabels.fly_to}</FormLabel>
                         <Combobox
                             {...getFieldProps('fly_to')}
-                            onBlur={() => setFieldTouched('fly_to')}
                             placeholder='Destination city'
-                            items={toAirports}
+                            onBlur={() => setFieldTouched('fly_to')}
+                            items={locationSearch.fly_to}
                             toDropdownOption={FlightSearchService.locationToLabel}
-                            onInputValueChange={({ inputValue, selectedItem }) => {
-                                if (inputValue === FlightSearchService.locationToString(selectedItem)) {
-                                    setFieldValue('fly_to', selectedItem?.id);
-                                    return;
-                                }
-
-                                if (values.fly_to) setFieldValue('fly_to', '');
-
-                                clearTimeout(toSearchTimeout);
-                                toSearchTimeout = setTimeout(async () => {
-                                    const airports = await FlightSearchService.fetchLocations(inputValue);
-                                    setToAirports(airports);
-                                }, 450);
-                            }}
+                            onInputValueChange={changes => setLocations('fly_to', changes)}
                             onSelectedItemChange={({ selectedItem }) => setFieldValue('fly_to', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
                         />
