@@ -25,8 +25,14 @@ const searchTimeouts = {
 
 export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, errors, touched, isSubmitting, setFieldTouched, getFieldProps, setFieldValue }) => {
     const [locationSearch, setLocationSearch] = useState({
-        fly_from: [],
-        fly_to: []
+        fly_from: {
+            loading: false,
+            data: []
+        },
+        fly_to: {
+            loading: false,
+            data: []
+        }
     });
     const getIsValid = (formKey: keyof FlightFormValues) => {
         return !!errors[formKey] && touched[formKey];
@@ -34,11 +40,22 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
     const setLocations = (field: keyof FlightFormValues, { inputValue, selectedItem }: UseComboboxStateChange<LocationDto>) => {
         if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
         if (values[field]) setFieldValue(field, '');
-        
+
+        setLocationSearch(prev => ({
+            ...prev, [field]: {
+                loading: true,
+                data: []
+            }
+        }));
         clearTimeout(searchTimeouts[field]);
         searchTimeouts[field] = setTimeout(async () => {
-            const airports = await FlightSearchService.fetchLocations(inputValue);
-            setLocationSearch(prev => ({...prev, [field]: airports}));
+            const data = await FlightSearchService.fetchLocations(inputValue);
+            setLocationSearch(prev => ({
+                ...prev, [field]: {
+                    loading: false,
+                    data
+                }
+            }));
         }, 450);
     }
 
@@ -52,7 +69,8 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         <Combobox
                             {...getFieldProps('fly_from')}
                             placeholder='Origin city'
-                            items={locationSearch.fly_from}
+                            loading={locationSearch.fly_from.loading}
+                            items={locationSearch.fly_from.data}
                             toDropdownOption={FlightSearchService.locationToLabel}
                             onBlur={() => setFieldTouched('fly_from')}
                             onInputValueChange={changes => setLocations('fly_from', changes)}
@@ -66,8 +84,9 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         <Combobox
                             {...getFieldProps('fly_to')}
                             placeholder='Destination city'
+                            loading={locationSearch.fly_to.loading}
                             onBlur={() => setFieldTouched('fly_to')}
-                            items={locationSearch.fly_to}
+                            items={locationSearch.fly_to.data}
                             toDropdownOption={FlightSearchService.locationToLabel}
                             onInputValueChange={changes => setLocations('fly_to', changes)}
                             onSelectedItemChange={({ selectedItem }) => setFieldValue('fly_to', selectedItem?.id)}

@@ -2,7 +2,6 @@ import React from 'react';
 import { useCombobox, UseComboboxProps } from "downshift";
 import { Input, List, ListItem, Flex, IconButton, ListItemProps, ListProps, InputProps } from "@chakra-ui/react";
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
-import { FieldInputProps } from 'formik';
 
 export interface ComboboxItem {
     label: string;
@@ -35,6 +34,7 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 );
 
 interface ComboboxProps<T> extends UseComboboxProps<T> {
+    loading?: boolean;
     onBlur: (e: React.FormEvent) => void;
     toDropdownOption: (item: T) => React.ReactNode;
     placeholder?: string;
@@ -53,6 +53,7 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
     } = useCombobox({ ...props });
 
     function renderDropdownResults() {
+        if (props.loading) return null;
         if (!inputValue) {
             return <div>Start typing to search</div>
         }
@@ -90,6 +91,8 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
                     {...getToggleButtonProps()}
                     aria-label={"toggle menu"}
                     colorScheme="green"
+                    disabled={props.loading}
+                    isLoading={props.loading}
                     icon={isOpen ? <ArrowUpIcon /> : <ArrowDownIcon />}
                 />
                 <ComboboxList

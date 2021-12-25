@@ -28,12 +28,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     const response = await kiwiApi.searches.search({
         ...form,
-        max_stopovers: !form.non_stop ? 1 : undefined,
         date_to: form.date_from,
         return_to: form.return_from,
         locale: 'en',
-        sort: 'price'
-    });
+        sort: 'price',
+        max_stopovers: form.non_stop && 0
+    }); 
     
     const flightDtos = response.data.map((x): FlightDto => ({ 
         id: x.id,

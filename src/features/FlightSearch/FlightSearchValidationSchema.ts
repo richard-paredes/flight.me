@@ -22,8 +22,7 @@ export const FlightSearchValidationSchema: Yup.SchemaOf<FlightFormValues> = Yup.
         .max(5, 'Too many infants')
         .required('Required'),
     selected_cabins: Yup.string()
-        .oneOf(TravelClasses, 'Invalid travel class')
-        .required('Required'),
+        .oneOf(TravelClasses, 'Invalid travel class'),
     non_stop: Yup.boolean()
         .required('Required'),
     curr: Yup.string()
