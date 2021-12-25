@@ -1,10 +1,13 @@
 import React from 'react';
 
-import { LocationDto } from "../pages/api/locations";
 import { Stringified } from "../types";
-import { DropdownOption } from '../components/AirportDropdownOption';
 import { FlightFormValues, TravelClassOption } from "../types/FlightSearch";
+
+import { LocationDto } from "../pages/api/locations";
 import { FlightDto } from '../pages/api/flights';
+
+import { DropdownOption } from '../components/DropdownOption';
+
 
 interface IFlightSearchService {
     getTravelClasses: () => TravelClassOption[];
@@ -54,7 +57,7 @@ class FlightSearchService implements IFlightSearchService {
             adults: 1,
             children: 0,
             infants: 0,
-            max_stopovers: undefined,
+            non_stop: true,
             curr: 'USD',
             price_to: 150,
             limit: 50
@@ -71,7 +74,7 @@ class FlightSearchService implements IFlightSearchService {
             children: "Children",
             infants: "Infants",
             selected_cabins: "Travel Class",
-            max_stopovers: "Non-stop",
+            non_stop: "Non-stop",
             curr: "Currency",
             price_to: "Price alert threshold",
             limit: "Limit results"

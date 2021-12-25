@@ -2,6 +2,7 @@ import React from 'react';
 import { useCombobox, UseComboboxProps } from "downshift";
 import { Input, List, ListItem, Flex, IconButton, ListItemProps, ListProps, InputProps } from "@chakra-ui/react";
 import { ArrowDownIcon, ArrowUpIcon } from '@chakra-ui/icons';
+import { FieldInputProps } from 'formik';
 
 export interface ComboboxItem {
     label: string;
@@ -34,6 +35,7 @@ const ComboboxItem = React.forwardRef<HTMLLIElement, {
 );
 
 interface ComboboxProps<T> extends UseComboboxProps<T> {
+    onBlur: (e: React.FormEvent) => void;
     toDropdownOption: (item: T) => React.ReactNode;
     placeholder?: string;
 }
@@ -48,7 +50,7 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
         getComboboxProps,
         highlightedIndex,
         getItemProps,
-    } = useCombobox({...props});
+    } = useCombobox({ ...props });
 
     function renderDropdownResults() {
         if (!inputValue) {
@@ -68,11 +70,20 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
         ))
     }
 
+    const mergeInputProps = () => {
+        const downshiftInputProps = { ...getInputProps() };
+        const onBlur = (e: React.FormEvent) => {
+            props.onBlur(e);
+            downshiftInputProps.onBlur(e);
+        };
+        return { ...downshiftInputProps, onBlur };
+    };
+
     return (
         <Flex {...getComboboxProps()} position="relative">
             <Flex direction="row" alignItems="center" w="full">
                 <ComboboxInput
-                    {...getInputProps()}
+                    {...mergeInputProps()}
                     placeholder={props.placeholder}
                 />
                 <IconButton
@@ -97,7 +108,7 @@ export const Combobox = <T extends unknown>(props: ComboboxProps<T>) => {
                     color="black"
                     bgColor="white"
                 >
-                  {renderDropdownResults()}  
+                    {renderDropdownResults()}
                 </ComboboxList>
             </Flex>
         </Flex>

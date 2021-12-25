@@ -1,21 +1,17 @@
-import React, { useState } from 'react';
-import { FieldInputProps, Form, FormikErrors, FormikTouched } from 'formik';
+import React, { useEffect, useState } from 'react';
+import { FieldInputProps, Form, FormikProps } from 'formik';
 import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button } from '@chakra-ui/react';
 
-import { Combobox } from './Combobox';
+import { Combobox } from '../../components/Combobox';
 
-import { LocationDto } from '../pages/api/locations';
-import { FlightFormValues } from '../types/FlightSearch';
-import FlightSearchService from '../services/FlightSearchService';
+import { LocationDto } from '../../pages/api/locations';
+import { FlightFormValues } from '../../types/FlightSearch';
+import FlightSearchService from '../../services/FlightSearchService';
 
-interface FlightSearchFormProps {
-    values: FlightFormValues;
-    errors: FormikErrors<FlightFormValues>;
-    touched: FormikTouched<FlightFormValues>;
-    isSubmitting: boolean;
-    getFieldProps(field: string): FieldInputProps<any>;
-    setFieldValue(field: string, value: any, shouldValidate?: boolean): void;
-    submitForm(): Promise<void>;
+interface FlightSearchFormProps extends FormikProps<FlightFormValues> {
+    getFieldProps: (field: keyof FlightFormValues) => FieldInputProps<any>;
+    setFieldTouched: (field: keyof FlightFormValues, shouldValidate?: boolean) => void;
+    setFieldValue: (field: keyof FlightFormValues, value: any, shouldValidate?: boolean) => void;
 }
 
 const flightFormLabels = FlightSearchService.getFlightFormLabels();
@@ -24,12 +20,13 @@ const travelClasses = FlightSearchService.getTravelClasses();
 let fromSearchTimeout: NodeJS.Timeout;
 let toSearchTimeout: NodeJS.Timeout;
 
-export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, errors, touched, isSubmitting, getFieldProps, setFieldValue, submitForm }) => {
+export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, errors, touched, isSubmitting, setFieldTouched, getFieldProps, setFieldValue }) => {
     const [fromAirports, setFromAirports] = useState<LocationDto[]>([]);
     const [toAirports, setToAirports] = useState<LocationDto[]>([]);
 
+    useEffect(() => { console.log(touched) }, [touched])
     const getIsValid = (formKey: keyof FlightFormValues) => {
-        return !!errors[formKey] && !!touched[formKey];
+        return !!errors[formKey] && touched[formKey];
     }
 
     return (
@@ -39,20 +36,26 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     <FormControl isInvalid={getIsValid('fly_from')} isRequired p="3">
                         <FormLabel>{flightFormLabels.fly_from}</FormLabel>
                         <Combobox
+                            {...getFieldProps('fly_from')}
                             placeholder='Origin city'
                             items={fromAirports}
                             toDropdownOption={FlightSearchService.locationToLabel}
-                            onInputValueChange={({inputValue, selectedItem}) => {
-                                if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
-                                
+                            onBlur={() => setFieldTouched('fly_from')}
+                            onInputValueChange={({ inputValue, selectedItem }) => {
+                                if (inputValue === FlightSearchService.locationToString(selectedItem)) {
+                                    setFieldValue('fly_from', selectedItem?.id);
+                                    return;
+                                }
+
+                                if (values.fly_from) setFieldValue('fly_from', '');
+
                                 clearTimeout(fromSearchTimeout);
-                                setFieldValue('fly_from', selectedItem?.id);
                                 fromSearchTimeout = setTimeout(async () => {
                                     const airports = await FlightSearchService.fetchLocations(inputValue);
                                     setFromAirports(airports);
-                                }, 750);
+                                }, 450);
                             }}
-                            onSelectedItemChange={({selectedItem}) => setFieldValue('fly_from', selectedItem?.id)}
+                            onSelectedItemChange={({ selectedItem }) => setFieldValue('fly_from', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
                         />
                         <FormErrorMessage>{errors.fly_from}</FormErrorMessage>
@@ -60,20 +63,26 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     <FormControl isInvalid={getIsValid('fly_to')} isRequired p="3">
                         <FormLabel>{flightFormLabels.fly_to}</FormLabel>
                         <Combobox
+                            {...getFieldProps('fly_to')}
+                            onBlur={() => setFieldTouched('fly_to')}
                             placeholder='Destination city'
                             items={toAirports}
                             toDropdownOption={FlightSearchService.locationToLabel}
-                            onInputValueChange={({inputValue, selectedItem}) => {
-                                if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
+                            onInputValueChange={({ inputValue, selectedItem }) => {
+                                if (inputValue === FlightSearchService.locationToString(selectedItem)) {
+                                    setFieldValue('fly_to', selectedItem?.id);
+                                    return;
+                                }
+
+                                if (values.fly_to) setFieldValue('fly_to', '');
 
                                 clearTimeout(toSearchTimeout);
-                                setFieldValue('fly_to', selectedItem?.id);
                                 toSearchTimeout = setTimeout(async () => {
                                     const airports = await FlightSearchService.fetchLocations(inputValue);
                                     setToAirports(airports);
-                                }, 750);
+                                }, 450);
                             }}
-                            onSelectedItemChange={({selectedItem}) => setFieldValue('fly_to', selectedItem?.id)}
+                            onSelectedItemChange={({ selectedItem }) => setFieldValue('fly_to', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
                         />
                         <FormErrorMessage>{errors.fly_to}</FormErrorMessage>
@@ -82,12 +91,12 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                 <Flex w="full">
                     <FormControl isInvalid={getIsValid('date_from')} isRequired p="3">
                         <FormLabel>{flightFormLabels.date_from}</FormLabel>
-                        <Input {...getFieldProps('date_from')} type="date" />
+                        <Input {...getFieldProps('date_from')} type="date" required />
                         <FormErrorMessage>{errors.date_from}</FormErrorMessage>
                     </FormControl>
                     <FormControl isInvalid={getIsValid('return_from')} isRequired p="3">
                         <FormLabel>{flightFormLabels.return_from}</FormLabel>
-                        <Input {...getFieldProps('return_from')} type="date" min={values.date_from} />
+                        <Input {...getFieldProps('return_from')} type="date" min={values.date_from} required />
                         <FormErrorMessage>{errors.return_from}</FormErrorMessage>
                     </FormControl>
                 </Flex>
@@ -134,8 +143,10 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         </Select>
                     </FormControl>
                     <FormControl p="3" mt="8">
-                        <Checkbox {...getFieldProps('max_stopovers')} onChange={(e) => setFieldValue('max_stopovers', e.target.checked ? 0 : undefined)}>{flightFormLabels.max_stopovers}</Checkbox>
-                        <FormErrorMessage>{errors.max_stopovers}</FormErrorMessage>
+                        <Checkbox {...getFieldProps('non_stop')}>
+                            {flightFormLabels.non_stop}
+                        </Checkbox>
+                        <FormErrorMessage>{errors.non_stop}</FormErrorMessage>
                     </FormControl>
                 </Flex>
                 <Flex w="full">
@@ -174,7 +185,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     </FormControl>
                 </Flex>
                 <Flex w="full" justify="center" py="3">
-                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
+                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(errors).length > 0}>
                         Gimme the goods
                     </Button>
                 </Flex>

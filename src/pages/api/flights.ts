@@ -28,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     const response = await kiwiApi.searches.search({
         ...form,
+        max_stopovers: !form.non_stop ? 1 : undefined,
         date_to: form.date_from,
         return_to: form.return_from,
         locale: 'en',

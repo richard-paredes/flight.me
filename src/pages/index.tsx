@@ -1,6 +1,6 @@
 import { Container } from '../components/Container'
 import { Navbar } from '../components/Navbar'
-import { FlightSearch } from '../components/FlightSearch'
+import { FlightSearch } from '../features/FlightSearch/FlightSearch'
 
 const Index = () => {
   return (<Container minH="100vh" overflowX="hidden">

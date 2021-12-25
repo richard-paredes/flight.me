@@ -1,8 +1,8 @@
-export type TravelClass = "M" | "W" | "C" | "F";
+export const TravelClasses = ["M", "W", "C", "F", ""];
 
 export interface TravelClassOption {
     label: string;
-    value: TravelClass;
+    value: typeof TravelClasses[number];
 }
 
 export interface FlightFormValues {
@@ -13,10 +13,10 @@ export interface FlightFormValues {
     adults: number;
     children: number;
     infants: number;
-    selected_cabins: TravelClass;
-    max_stopovers: number;
+    selected_cabins: typeof TravelClasses[number];
+    non_stop: boolean;
     curr: string;
     price_to: number;
-    limit?: number;
+    limit: number;
 }
 
