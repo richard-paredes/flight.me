@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FieldInputProps, Form, FormikProps } from 'formik';
 import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button } from '@chakra-ui/react';
+import PhoneNumberInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'
+import styled from '@emotion/styled';
 
 import { Combobox } from '../../components/Combobox';
 
@@ -63,6 +66,19 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
     return (
         <Form>
             <Flex flexDir="column" minW="xl" maxW="xl">
+                <Flex w="full" flexWrap="wrap">
+                    <FormControl isInvalid={getIsValid('phone_number')} isRequired p="3">
+                        <FormLabel>{flightFormLabels.phone_number}</FormLabel>
+                        <StyledPhoneNumberInput
+                            {...getFieldProps('phone_number')}
+                            placeholder="Phone number"
+                            onChange={(phone) => setFieldValue('phone_number', phone, true)}
+                            inputComponent={Input}
+                            defaultCountry='US'
+                        />
+                        <FormErrorMessage>{errors.phone_number}</FormErrorMessage>
+                    </FormControl>
+                </Flex>
                 <Flex w="full" flexWrap="wrap">
                     <FormControl isInvalid={getIsValid('fly_from')} isRequired p="3">
                         <FormLabel>{flightFormLabels.fly_from}</FormLabel>
@@ -193,10 +209,16 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                 </Flex>
                 <Flex w="full" justify="center" py="3">
                     <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(errors).length > 0}>
-                        Gimme the goods
+                        Subscribe to price drops
                     </Button>
                 </Flex>
             </Flex>
         </Form>
     );
 }
+
+const StyledPhoneNumberInput = styled(PhoneNumberInput)`
+    select { 
+        background: white;
+    }
+`;

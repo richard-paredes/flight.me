@@ -49,6 +49,7 @@ class FlightSearchService implements IFlightSearchService {
         tomorrow.setDate(today.getDate() + 1);
 
         const defaultValues: FlightFormValues = {
+            phone_number: '',
             fly_from: '',
             fly_to: '',
             date_from: today.toLocaleDateString('en-CA'),
@@ -66,6 +67,7 @@ class FlightSearchService implements IFlightSearchService {
     };
     getFlightFormLabels = () => {
         const flightFormLabels: Stringified<Required<FlightFormValues>> = {
+            phone_number: 'Phone Number',
             fly_from: "Origin",
             fly_to: "Destination",
             date_from: "Departure",

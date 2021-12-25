@@ -6,6 +6,7 @@ export interface TravelClassOption {
 }
 
 export interface FlightFormValues {
+    phone_number: string;
     fly_from: string;
     fly_to: string;
     date_from: string;
