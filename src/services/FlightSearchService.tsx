@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { LocationDto } from "../pages/api/airports";
+import { LocationDto } from "../pages/api/locations";
 import { Stringified } from "../types";
 import { DropdownOption } from '../components/AirportDropdownOption';
 import { FlightFormValues, TravelClassOption } from "../types/FlightSearch";
+import { FlightDto } from '../pages/api/flights';
 
 interface IFlightSearchService {
     getTravelClasses: () => TravelClassOption[];
@@ -20,19 +21,23 @@ class FlightSearchService implements IFlightSearchService {
     getTravelClasses = () => {
         return [{
             label: "Economy",
-            value: "ECONOMY"
+            value: "M"
         },
         {
             label: "Premium Economy",
-            value: "PREMIUM_ECONOMY"
+            value: "W"
         },
         {
             label: "Business",
-            value: "BUSINESS"
+            value: "C"
         },
         {
             label: "First",
-            value: "FIRST"
+            value: "F"
+        },
+        {
+            label: "Any",
+            value: ""        
         }] as TravelClassOption[];
     };
     getDefaultFormValues = () => {
@@ -41,60 +46,58 @@ class FlightSearchService implements IFlightSearchService {
         tomorrow.setDate(today.getDate() + 1);
 
         const defaultValues: FlightFormValues = {
-            originLocationCode: '',
-            destinationLocationCode: '',
-            departureDate: today.toLocaleDateString('en-CA'),
-            returnDate: tomorrow.toLocaleDateString('en-CA'),
-            travelClass: 'ECONOMY',
+            fly_from: '',
+            fly_to: '',
+            date_from: today.toLocaleDateString('en-CA'),
+            return_from: tomorrow.toLocaleDateString('en-CA'),
+            selected_cabins: 'M',
             adults: 1,
             children: 0,
             infants: 0,
-            nonStop: false,
-            currencyCode: 'USD',
-            maxPrice: 150,
-            max: 10
+            max_stopovers: undefined,
+            curr: 'USD',
+            price_to: 150,
+            limit: 50
         };
         return defaultValues;
     };
     getFlightFormLabels = () => {
         const flightFormLabels: Stringified<Required<FlightFormValues>> = {
-            originLocationCode: "Origin",
-            destinationLocationCode: "Destination",
-            departureDate: "Departure",
-            returnDate: "Return",
+            fly_from: "Origin",
+            fly_to: "Destination",
+            date_from: "Departure",
+            return_from: "Return",
             adults: "Adults",
             children: "Children",
             infants: "Infants",
-            travelClass: "Travel Class",
-            includedAirlineCodes: undefined,
-            excludedAirlineCodes: undefined,
-            nonStop: "Non-stop",
-            currencyCode: "Currency",
-            maxPrice: "Max Price",
-            max: undefined
+            selected_cabins: "Travel Class",
+            max_stopovers: "Non-stop",
+            curr: "Currency",
+            price_to: "Price alert threshold",
+            limit: "Limit results"
         }
         return flightFormLabels;
     };
     locationToLabel = (location: LocationDto) => {
         const name = this.locationToString(location);
-        const sublabel = location.stateName ? `${location.stateName}, ${location.countryName}` 
+        const sublabel = location.subdivisionName ? `${location.subdivisionName}, ${location.countryName}` 
             : location.countryName;
 
         return <DropdownOption name={name} sublabel={sublabel} />;
     };
-    locationToString = (location: LocationDto) => {
-        return location.name;
+    locationToString = (location?: LocationDto) => {
+        return location?.name;
     };
     fetchLocations = async (search: string) => {
         if (!search) return [];
 
-        const response = await fetch('/api/airports?search=' + encodeURIComponent(search));
+        const response = await fetch('/api/locations?search=' + encodeURIComponent(search));
         const data: LocationDto[] = await response.json();
         return data;
     };
     submitSearch = async (form: FlightFormValues) => {
         const response = await fetch('/api/flights', { method: 'POST', body: JSON.stringify(form) });
-        const data: any[] = await response.json();
+        const data: FlightDto[] = await response.json();
         return data;
     };
 }

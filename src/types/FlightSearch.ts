@@ -1,4 +1,4 @@
-export type TravelClass = "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
+export type TravelClass = "M" | "W" | "C" | "F";
 
 export interface TravelClassOption {
     label: string;
@@ -6,19 +6,17 @@ export interface TravelClassOption {
 }
 
 export interface FlightFormValues {
-    originLocationCode: string;
-    destinationLocationCode: string;
-    departureDate: string;
-    returnDate: string;
+    fly_from: string;
+    fly_to: string;
+    date_from: string;
+    return_from: string;
     adults: number;
     children: number;
     infants: number;
-    travelClass: TravelClass;
-    includedAirlineCodes?: string[];
-    excludedAirlineCodes?: string[];
-    nonStop: boolean;
-    currencyCode: string;
-    maxPrice?: number;
-    max?: number;
+    selected_cabins: TravelClass;
+    max_stopovers: number;
+    curr: string;
+    price_to: number;
+    limit?: number;
 }
 

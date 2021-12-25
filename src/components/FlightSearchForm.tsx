@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { FieldInputProps, FormikErrors, FormikTouched } from 'formik';
-import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button, Box } from '@chakra-ui/react';
+import { FieldInputProps, Form, FormikErrors, FormikTouched } from 'formik';
+import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button } from '@chakra-ui/react';
 
 import { Combobox } from './Combobox';
 
-import { LocationDto } from '../pages/api/airports';
+import { LocationDto } from '../pages/api/locations';
 import { FlightFormValues } from '../types/FlightSearch';
 import FlightSearchService from '../services/FlightSearchService';
 
@@ -29,65 +29,72 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
     const [toAirports, setToAirports] = useState<LocationDto[]>([]);
 
     const getIsValid = (formKey: keyof FlightFormValues) => {
-        return !!errors[formKey] && !!touched[formKey]
+        return !!errors[formKey] && !!touched[formKey];
     }
 
     return (
-        <form onSubmit={submitForm}>
+        <Form>
             <Flex flexDir="column" minW="xl" maxW="xl">
                 <Flex w="full" flexWrap="wrap">
-                    <FormControl isInvalid={getIsValid('originLocationCode')} isRequired p="3">
-                        <FormLabel>{flightFormLabels.originLocationCode}</FormLabel>
-                        <Combobox 
+                    <FormControl isInvalid={getIsValid('fly_from')} isRequired p="3">
+                        <FormLabel>{flightFormLabels.fly_from}</FormLabel>
+                        <Combobox
                             placeholder='Origin city'
                             items={fromAirports}
-                            toDropdownOption={FlightSearchService.locationToLabel} 
-                            onInputValueChange={(changes) => { 
+                            toDropdownOption={FlightSearchService.locationToLabel}
+                            onInputValueChange={({inputValue, selectedItem}) => {
+                                if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
+                                
                                 clearTimeout(fromSearchTimeout);
+                                setFieldValue('fly_from', selectedItem?.id);
                                 fromSearchTimeout = setTimeout(async () => {
-                                    const airports = await FlightSearchService.fetchLocations(changes.inputValue);
+                                    const airports = await FlightSearchService.fetchLocations(inputValue);
                                     setFromAirports(airports);
-                                }, 1000);
+                                }, 750);
                             }}
-                            
+                            onSelectedItemChange={({selectedItem}) => setFieldValue('fly_from', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
                         />
-                        <FormErrorMessage>{errors.originLocationCode}</FormErrorMessage>
+                        <FormErrorMessage>{errors.fly_from}</FormErrorMessage>
                     </FormControl>
-                    <FormControl isInvalid={getIsValid('destinationLocationCode')} isRequired p="3">
-                        <FormLabel>{flightFormLabels.destinationLocationCode}</FormLabel>
-                        <Combobox 
+                    <FormControl isInvalid={getIsValid('fly_to')} isRequired p="3">
+                        <FormLabel>{flightFormLabels.fly_to}</FormLabel>
+                        <Combobox
                             placeholder='Destination city'
-                            items={toAirports} 
+                            items={toAirports}
                             toDropdownOption={FlightSearchService.locationToLabel}
-                            onInputValueChange={(changes) => { 
+                            onInputValueChange={({inputValue, selectedItem}) => {
+                                if (inputValue === FlightSearchService.locationToString(selectedItem)) return;
+
                                 clearTimeout(toSearchTimeout);
+                                setFieldValue('fly_to', selectedItem?.id);
                                 toSearchTimeout = setTimeout(async () => {
-                                    const airports = await FlightSearchService.fetchLocations(changes.inputValue);
+                                    const airports = await FlightSearchService.fetchLocations(inputValue);
                                     setToAirports(airports);
-                                }, 1000);
+                                }, 750);
                             }}
+                            onSelectedItemChange={({selectedItem}) => setFieldValue('fly_to', selectedItem?.id)}
                             itemToString={FlightSearchService.locationToString}
-                            />
-                        <FormErrorMessage>{errors.destinationLocationCode}</FormErrorMessage>
+                        />
+                        <FormErrorMessage>{errors.fly_to}</FormErrorMessage>
                     </FormControl>
                 </Flex>
                 <Flex w="full">
-                    <FormControl isInvalid={getIsValid('departureDate')} isRequired p="3">
-                        <FormLabel>{flightFormLabels.departureDate}</FormLabel>
-                        <Input {...getFieldProps('departureDate')} type="date" />
-                        <FormErrorMessage>{errors.departureDate}</FormErrorMessage>
+                    <FormControl isInvalid={getIsValid('date_from')} isRequired p="3">
+                        <FormLabel>{flightFormLabels.date_from}</FormLabel>
+                        <Input {...getFieldProps('date_from')} type="date" />
+                        <FormErrorMessage>{errors.date_from}</FormErrorMessage>
                     </FormControl>
-                    <FormControl isInvalid={getIsValid('returnDate')} isRequired p="3">
-                        <FormLabel>{flightFormLabels.returnDate}</FormLabel>
-                        <Input {...getFieldProps('returnDate')} type="date" min={values.departureDate} />
-                        <FormErrorMessage>{errors.returnDate}</FormErrorMessage>
+                    <FormControl isInvalid={getIsValid('return_from')} isRequired p="3">
+                        <FormLabel>{flightFormLabels.return_from}</FormLabel>
+                        <Input {...getFieldProps('return_from')} type="date" min={values.date_from} />
+                        <FormErrorMessage>{errors.return_from}</FormErrorMessage>
                     </FormControl>
                 </Flex>
                 <Flex w="full">
                     <FormControl isInvalid={getIsValid('adults')} isRequired p="3">
                         <FormLabel>{flightFormLabels.adults}</FormLabel>
-                        <NumberInput {...getFieldProps('adults')} onChange={val => setFieldValue('adults', val)} min={1} max={20}>
+                        <NumberInput {...getFieldProps('adults')} onChange={val => setFieldValue('adults', val)} min={1} max={5}>
                             <NumberInputField {...getFieldProps('adults')} />
                             <NumberInputStepper>
                                 <NumberIncrementStepper />
@@ -98,7 +105,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     </FormControl>
                     <FormControl isInvalid={getIsValid('children')} p="3">
                         <FormLabel>{flightFormLabels.children}</FormLabel>
-                        <NumberInput {...getFieldProps('children')} onChange={val => setFieldValue('children', val)} min={0} max={20}>
+                        <NumberInput {...getFieldProps('children')} onChange={val => setFieldValue('children', val)} min={0} max={5}>
                             <NumberInputField />
                             <NumberInputStepper>
                                 <NumberIncrementStepper />
@@ -109,7 +116,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     </FormControl>
                     <FormControl isInvalid={getIsValid('infants')} p="3">
                         <FormLabel>{flightFormLabels.infants}</FormLabel>
-                        <NumberInput {...getFieldProps('infants')} onChange={val => setFieldValue('infants', val)} min={0} max={20}>
+                        <NumberInput {...getFieldProps('infants')} onChange={val => setFieldValue('infants', val)} min={0} max={5}>
                             <NumberInputField />
                             <NumberInputStepper>
                                 <NumberIncrementStepper />
@@ -121,26 +128,26 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                 </Flex>
                 <Flex w="full" align="center">
                     <FormControl p="3">
-                        <FormLabel>{flightFormLabels.travelClass}</FormLabel>
-                        <Select {...getFieldProps('travelClass')}>
+                        <FormLabel>{flightFormLabels.selected_cabins}</FormLabel>
+                        <Select {...getFieldProps('selected_cabins')}>
                             {travelClasses.map(opt => <option value={opt.value} key={opt.value}>{opt.label}</option>)}
                         </Select>
                     </FormControl>
                     <FormControl p="3" mt="8">
-                        <Checkbox {...getFieldProps('nonStop')}>{flightFormLabels.nonStop}</Checkbox>
-                        <FormErrorMessage>{errors.nonStop}</FormErrorMessage>
+                        <Checkbox {...getFieldProps('max_stopovers')} onChange={(e) => setFieldValue('max_stopovers', e.target.checked ? 0 : undefined)}>{flightFormLabels.max_stopovers}</Checkbox>
+                        <FormErrorMessage>{errors.max_stopovers}</FormErrorMessage>
                     </FormControl>
                 </Flex>
                 <Flex w="full">
                     <FormControl p="3">
-                        <FormLabel>{flightFormLabels.maxPrice}</FormLabel>
+                        <FormLabel>{flightFormLabels.price_to}</FormLabel>
                         <Flex>
-                            <NumberInput {...getFieldProps('maxPrice')}
-                                value={`$${values.maxPrice}`}
+                            <NumberInput {...getFieldProps('price_to')}
+                                value={`$${values.price_to}`}
                                 step={10}
                                 min={10}
                                 max={2000}
-                                onChange={val => setFieldValue('maxPrice', val.replace(/^\$/, ''))}
+                                onChange={val => setFieldValue('price_to', val.replace(/^\$/, ''))}
                                 maxW='100px'
                                 mr='1rem'>
                                 <NumberInputField />
@@ -155,23 +162,23 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                                 max={2000}
                                 step={10}
                                 focusThumbOnChange={false}
-                                value={values.maxPrice}
-                                onChange={(val) => setFieldValue('maxPrice', val)}
+                                value={values.price_to}
+                                onChange={(val) => setFieldValue('price_to', val)}
                             >
                                 <SliderTrack>
                                     <SliderFilledTrack />
                                 </SliderTrack>
-                                <SliderThumb fontSize='1px' boxSize='16px' children={values.maxPrice} />
+                                <SliderThumb fontSize='1px' boxSize='16px' children={values.price_to} />
                             </Slider>
                         </Flex>
                     </FormControl>
                 </Flex>
                 <Flex w="full" justify="center" py="3">
-                    <Button colorScheme="green" onClick={submitForm} type="submit" isLoading={isSubmitting}>
+                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
                         Gimme the goods
                     </Button>
                 </Flex>
             </Flex>
-        </form>
+        </Form>
     );
 }
