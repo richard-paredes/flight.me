@@ -11,7 +11,7 @@ Yup.addMethod<Yup.StringSchema>(Yup.string, "phoneNumber", function (message: st
     return this.test({
         name: "phoneNumber",
         message: message,
-        test: (value) => isValidPhoneNumber(value)
+        test: (value) => isValidPhoneNumber(value || '')
     });
 });
 

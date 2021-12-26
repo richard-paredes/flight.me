@@ -208,7 +208,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                     </FormControl>
                 </Flex>
                 <Flex w="full" justify="center" py="3">
-                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(errors).length > 0}>
+                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(touched).length === 0 || Object.keys(errors).length > 0}>
                         Subscribe to price drops
                     </Button>
                 </Flex>
