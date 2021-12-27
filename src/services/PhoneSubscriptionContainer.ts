@@ -8,11 +8,13 @@ export interface IPhoneSubscriptionsContainer {
     delete: (phoneSubscriptionId: string) => Promise<ItemResponse<CosmosEntity<PhoneSubscription>>>;
     query: (query: string | SqlQuerySpec) => Promise<CosmosEntity<PhoneSubscription>[]>;
     getByPhoneNumber: (phoneNumber: string) => Promise<CosmosEntity<PhoneSubscription> | null>;
+    getAll: () => Promise<CosmosEntity<PhoneSubscription>[]>;
 }
 
-export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer {
+export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsContainer {
     private readonly PartitionKey: string;
     private readonly Container: Container;
+
     constructor(client: Container, partitionKey: string) {
         this.Container = client;
         this.PartitionKey = partitionKey;
@@ -26,6 +28,17 @@ export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer
             .items
             .upsert<PhoneSubscription>(phoneSubscription)
         return response;
+    }
+
+    async getAll(): Promise<CosmosEntity<PhoneSubscription>[]> {
+        const queryResult = await this.query({
+            query: `
+                SELECT * FROM 
+                PhoneSubscriptions ps 
+            `
+        });
+        if (!queryResult) return [];
+        return queryResult;
     }
 
     async getByPhoneNumber(phoneNumber: string): Promise<CosmosEntity<PhoneSubscription> | null> {

@@ -2,7 +2,7 @@ import { LocationQuery, LocationResult } from "../types/KiwiApi/Locations";
 import { SearchQuery, SearchResult } from "../types/KiwiApi/Searches";
 import { ApiUtilityService, IApiUtilityService } from "./ApiUtilityService";
 
-export interface IKiwiApi {
+export interface IFlightApi {
     readonly locations: {
         query: (query: LocationQuery) => Promise<LocationResult>;
     };
@@ -11,7 +11,7 @@ export interface IKiwiApi {
     }
 }
 
-export class KiwiApi implements IKiwiApi {
+class FlightApiImpl implements IFlightApi {
     private readonly API_TOKEN: string;
     private readonly ApiUtility: IApiUtilityService;
 
@@ -59,3 +59,5 @@ export class KiwiApi implements IKiwiApi {
         }
     }
 }
+
+export const FlightApi: IFlightApi = new FlightApiImpl(process.env.KIWI_API_URL, process.env.KIWI_API_TOKEN);

@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { AppContext } from '../../services/FlightMeContext'
+import { FlightPriceTrackingService } from '../../services/FlightPriceTrackingService';
+
 export type FlightDto = {
     id: string;
     flyFrom: string;
@@ -13,11 +14,16 @@ export type FlightDto = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'GET') {
+    if (req.method !== 'POST') {
         return res.status(404);
     }
-    try {
 
+    if (req.headers.authorization !== `Bearer ${process.env.ALERT_AUTH_TOKEN}`) {
+        return res.status(401).json('Unauthorized');
+    }
+
+    try {
+        await FlightPriceTrackingService.dispatchPriceTrackers();
     } catch (err) {
         console.log('Failed to trigger alerts');
         console.error(err);

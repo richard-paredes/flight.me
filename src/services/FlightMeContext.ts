@@ -1,7 +1,7 @@
 import { Container, CosmosClient, Database, DatabaseResponse, PartitionKeyDefinition } from '@azure/cosmos';
 
 import { Configuration, IFlightMeContextConfiguration } from '../config/FlightSubscriptionConfig';
-import { IPhoneSubscriptionsContainer, PhoneSubscriptionsContainer } from './PhoneSubscriptionContainer';
+import { IPhoneSubscriptionsContainer, PhoneSubscriptionsContainerImpl } from './PhoneSubscriptionContainer';
 
 
 export interface IFlightMeContext {
@@ -10,7 +10,7 @@ export interface IFlightMeContext {
 };
 
 
-class FlightMeContext implements IFlightMeContext {
+class FlightMeContextImpl implements IFlightMeContext {
   private readonly Client: CosmosClient;
   private readonly Configuration: IFlightMeContextConfiguration;
   private Initialized: boolean;
@@ -28,7 +28,7 @@ class FlightMeContext implements IFlightMeContext {
 
     const database = await this.createDatabase(this.Configuration.database.id);
     const container = await this.createContainer(database.id, this.Configuration.container.id, this.Configuration.container.partitionKey);
-    this.PhoneSubscriptions = new PhoneSubscriptionsContainer(container, this.Configuration.container.partitionKey);
+    this.PhoneSubscriptions = new PhoneSubscriptionsContainerImpl(container, this.Configuration.container.partitionKey);
     this.Initialized = true;
   }
 
@@ -85,4 +85,4 @@ class FlightMeContext implements IFlightMeContext {
   }
 }
 
-export const AppContext: IFlightMeContext = new FlightMeContext(Configuration);
+export const FlightMeContext: IFlightMeContext = new FlightMeContextImpl(Configuration);
