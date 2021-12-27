@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FieldInputProps, Form, FormikProps } from 'formik';
-import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button } from '@chakra-ui/react';
+import { Flex, FormControl, FormLabel, FormErrorMessage, Input, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Select, Checkbox, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Button, Divider, Text } from '@chakra-ui/react';
 import PhoneNumberInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css'
 import styled from '@emotion/styled';
@@ -65,7 +65,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
 
     return (
         <Form>
-            <Flex flexDir="column" minW="xl" maxW="xl">
+            <Flex flexDir="column">
                 <Flex w="full" flexWrap="wrap">
                     <FormControl isInvalid={getIsValid('phone_number')} isRequired p="3">
                         <FormLabel>{flightFormLabels.phone_number}</FormLabel>
@@ -75,10 +75,14 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                             onChange={(phone) => setFieldValue('phone_number', phone, true)}
                             inputComponent={Input}
                             defaultCountry='US'
+                            autoFocus
                         />
                         <FormErrorMessage>{errors.phone_number}</FormErrorMessage>
                     </FormControl>
                 </Flex>
+            </Flex>
+            <Divider orientation="horizontal" py="2" />
+            <Flex flexDir="column" pt="3">
                 <Flex w="full" flexWrap="wrap">
                     <FormControl isInvalid={getIsValid('fly_from')} isRequired p="3">
                         <FormLabel>{flightFormLabels.fly_from}</FormLabel>
@@ -207,11 +211,12 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ values, erro
                         </Flex>
                     </FormControl>
                 </Flex>
-                <Flex w="full" justify="center" py="3">
-                    <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(touched).length === 0 || Object.keys(errors).length > 0}>
-                        Subscribe to price drops
-                    </Button>
-                </Flex>
+
+            </Flex>
+            <Flex w="full" justify="center" py="3">
+                <Button colorScheme="green" type="submit" isLoading={isSubmitting} disabled={isSubmitting || Object.keys(touched).length === 0 || Object.keys(errors).length > 0}>
+                    Subscribe to price tracking
+                </Button>
             </Flex>
         </Form>
     );

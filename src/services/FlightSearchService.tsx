@@ -16,12 +16,11 @@ interface IFlightSearchService {
     getFlightFormLabels: () => Stringified<Required<FlightFormValues>>;
     locationToString: (airport: LocationDto) => string;
     fetchLocations: (search: string) => Promise<LocationDto[]>;
-    submitSearch: (form: FlightFormValues) => Promise<any[]>;
+    submitSearch: (form: FlightFormValues) => Promise<void>;
 }
 
 class FlightSearchService implements IFlightSearchService {
-    searchableFields: (keyof LocationDto)[] = ['id'];
-    getTravelClasses = () => {
+    getTravelClasses = (): TravelClassOption[] => {
         return [{
             label: "Economy",
             value: "M"
@@ -43,7 +42,7 @@ class FlightSearchService implements IFlightSearchService {
             value: ""        
         }] as TravelClassOption[];
     };
-    getDefaultFormValues = () => {
+    getDefaultFormValues = (): FlightFormValues => {
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
@@ -65,8 +64,8 @@ class FlightSearchService implements IFlightSearchService {
         };
         return defaultValues;
     };
-    getFlightFormLabels = () => {
-        const flightFormLabels: Stringified<Required<FlightFormValues>> = {
+    getFlightFormLabels = (): Stringified<Required<FlightFormValues>> => {
+        return {
             phone_number: 'Phone Number',
             fly_from: "Origin",
             fly_to: "Destination",
@@ -80,30 +79,32 @@ class FlightSearchService implements IFlightSearchService {
             curr: "Currency",
             price_to: "Price alert threshold",
             limit: "Limit results"
-        }
-        return flightFormLabels;
+        };
     };
-    locationToLabel = (location: LocationDto) => {
+    locationToLabel = (location: LocationDto): JSX.Element => {
         const name = this.locationToString(location);
         const sublabel = location.subdivisionName ? `${location.subdivisionName}, ${location.countryName}` 
             : location.countryName;
 
         return <DropdownOption name={name} sublabel={sublabel} />;
     };
-    locationToString = (location?: LocationDto) => {
+    locationToString = (location?: LocationDto): string => {
         return location?.name;
     };
-    fetchLocations = async (search: string) => {
+    fetchLocations = async (search: string): Promise<LocationDto[]> => {
         if (!search) return [];
 
         const response = await fetch('/api/locations?search=' + encodeURIComponent(search));
         const data: LocationDto[] = await response.json();
         return data;
     };
-    submitSearch = async (form: FlightFormValues) => {
-        const response = await fetch('/api/flights', { method: 'POST', body: JSON.stringify(form) });
-        const data: FlightDto[] = await response.json();
-        return data;
+    submitSearch = async (form: FlightFormValues): Promise<void> => {
+        const response = await fetch('/api/subscriptions', { method: 'POST', body: JSON.stringify(form) });
+        if (response.status === 200) {
+            console.log('Successfully done!');
+        } else {
+            console.log('It failed ):');
+        }
     };
 }
 

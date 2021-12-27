@@ -1,6 +1,7 @@
 import Yup from '../../extensions/yup';
 
-import { FlightFormValues, TravelClasses } from '../../types/FlightSearch';
+import { TravelClasses } from '../../types/FlightPriceTracking/FlightPriceSubscription';
+import { FlightFormValues } from '../../types/FlightSearch';
 
 export const FlightSearchValidationSchema: Yup.SchemaOf<FlightFormValues> = Yup.object().shape({ 
     phone_number: Yup.string()

@@ -21,7 +21,7 @@ private readonly API_BASE_URL: string;
             .reduce((params, entry) => {
                 const [key, value] = entry;
                 if (Array.isArray(value)) {
-                    value.forEach(val => params.append(key, val));
+                    value.forEach((val) => params.append(key, val));
                 } else {
                     params.append(key, encodeURIComponent(value));
                 }

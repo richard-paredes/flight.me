@@ -13,7 +13,7 @@ export const FlightSearch = () => {
     }
 
     return (
-        <Flex border="1px" borderRadius="md" flexDir="row" flexWrap="wrap">
+        <Flex bgColor="blackAlpha.400" p="5" borderRadius="3xl" boxShadow="lg" flexDir="row" flexWrap="wrap" maxW="xl">
             <Formik initialValues={FlightSearchService.getDefaultFormValues()} onSubmit={handleSubmit} validationSchema={FlightSearchValidationSchema}>
                 {(formConfig) => <FlightSearchForm {...formConfig} />}
             </Formik>

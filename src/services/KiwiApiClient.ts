@@ -15,7 +15,7 @@ export class KiwiApi implements IKiwiApi {
     private readonly API_TOKEN: string;
     private readonly ApiUtility: IApiUtilityService;
 
-    constructor(api_base_url, access_token) {
+    constructor(api_base_url: string, access_token: string) {
         this.API_TOKEN = access_token;
         this.ApiUtility = new ApiUtilityService(api_base_url);
     }
@@ -27,7 +27,8 @@ export class KiwiApi implements IKiwiApi {
             const response = await fetch(request);
 
             if (response.status !== 200) {
-                console.error(response);
+                const error = await response.json();
+                console.error(error);
                 return {
                     locations: [],
                     meta: {
@@ -47,14 +48,14 @@ export class KiwiApi implements IKiwiApi {
             const response = await fetch(request);
 
             if (response.status !== 200) {
-                const result = await response.json();
-                console.error(result);
+                const error = await response.json();
+                console.error(error);
                 return {
                     data: []
                 };
             }
             
-            return await response.json();
+            return await response.json() as SearchResult;
         }
     }
 }
