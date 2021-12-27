@@ -1,8 +1,9 @@
+import { Configuration, IFlightApiServiceConfiguration } from "../config/FlightApiServiceConfiguration";
 import { LocationQuery, LocationResult } from "../types/KiwiApi/Locations";
 import { SearchQuery, SearchResult } from "../types/KiwiApi/Searches";
 import { ApiUtilityService, IApiUtilityService } from "./ApiUtilityService";
 
-export interface IFlightApi {
+export interface IFlightApiService {
     readonly locations: {
         query: (query: LocationQuery) => Promise<LocationResult>;
     };
@@ -11,19 +12,18 @@ export interface IFlightApi {
     }
 }
 
-class FlightApiImpl implements IFlightApi {
+class FlightApiServiceImpl implements IFlightApiService {
     private readonly API_TOKEN: string;
     private readonly ApiUtility: IApiUtilityService;
 
-    constructor(api_base_url: string, access_token: string) {
-        this.API_TOKEN = access_token;
-        this.ApiUtility = new ApiUtilityService(api_base_url);
+    constructor(config: IFlightApiServiceConfiguration) {
+        this.ApiUtility = new ApiUtilityService(config.base_url);
+        this.API_TOKEN = config.secret;
     }
 
     readonly locations = {
         query: async (query: LocationQuery): Promise<LocationResult> => {
             const request = this.ApiUtility.buildGetRequest('/locations/query', query, { 'apikey': this.API_TOKEN });
-            
             const response = await fetch(request);
 
             if (response.status !== 200) {
@@ -44,7 +44,6 @@ class FlightApiImpl implements IFlightApi {
     readonly searches = {
         search: async (query: SearchQuery): Promise<SearchResult> => {
             const request = this.ApiUtility.buildGetRequest('/search', query, { 'apikey': this.API_TOKEN });
-            
             const response = await fetch(request);
 
             if (response.status !== 200) {
@@ -54,10 +53,10 @@ class FlightApiImpl implements IFlightApi {
                     data: []
                 };
             }
-            
+
             return await response.json() as SearchResult;
         }
     }
 }
 
-export const FlightApi: IFlightApi = new FlightApiImpl(process.env.KIWI_API_URL, process.env.KIWI_API_TOKEN);
+export const FlightApi: IFlightApiService = new FlightApiServiceImpl(Configuration);

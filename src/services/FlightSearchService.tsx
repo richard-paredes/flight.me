@@ -58,7 +58,7 @@ class FlightSearchService implements IFlightSearchService {
             non_stop: true,
             curr: 'USD',
             price_to: 150,
-            limit: 50
+            limit: 5
         };
         return defaultValues;
     };

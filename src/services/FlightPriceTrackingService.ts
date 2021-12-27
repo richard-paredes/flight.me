@@ -5,38 +5,62 @@ import { FlightPriceSubscription } from "../types/FlightPriceTracking/FlightPric
 import { PhoneSubscription } from "../types/FlightPriceTracking/PhoneSubscription";
 
 import { FlightMeContext, IFlightMeContext } from "./FlightMeContext";
-import { FlightApi, IFlightApi } from "./FlightApi";
+import { FlightApi, IFlightApiService } from "./FlightApiService";
 import { SmsService, ISmsService } from "./SmsService";
+import { FlightSearchForm } from "../types/FlightSearch";
+import { IUrlShortenerService, UrlShortenerService } from "./UrlShortenerService";
 
 export interface IFlightPriceTrackingService {
     searchFlights: (subscription: FlightPriceSubscription) => Promise<FlightDto[]>;
     searchLocations: (searchTerm: string) => Promise<LocationDto[]>;
-    upsertPhoneSubscription: (phoneNumber: string, subscription: FlightPriceSubscription) => Promise<void>;
+    subscribe: (phoneNumber: string, searchForm: FlightSearchForm) => Promise<void>;
+    unsubscribe: (phoneNumber: string, subscriptionId: number) => Promise<void>;
     dispatchPriceTrackers: () => Promise<void>;
 }
 
 export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingService {
     private readonly Context: IFlightMeContext;
-    private readonly FlightApi: IFlightApi;
+    private readonly FlightApi: IFlightApiService;
     private readonly SmsService: ISmsService;
+    private readonly UrlShortener: IUrlShortenerService;
 
-    constructor(context: IFlightMeContext, smsService: ISmsService, flightApi: IFlightApi) {
+    constructor(context: IFlightMeContext, smsService: ISmsService, flightApi: IFlightApiService, urlShortener: IUrlShortenerService) {
         this.Context = context;
         this.SmsService = smsService;
         this.FlightApi = flightApi;
+        this.UrlShortener = urlShortener;
     }
 
-    async upsertPhoneSubscription(phoneNumber: string, subscription: FlightPriceSubscription): Promise<void> {
+    async subscribe(phoneNumber: string, searchForm: FlightSearchForm): Promise<void> {
         await this.Context.initialize();
         const existingSubscription = await this.Context.phoneSubscriptions()
             .getByPhoneNumber(phoneNumber);
 
         if (existingSubscription) {
-            await this.updateSubscription(existingSubscription, subscription);
+            await this.updateSubscription(existingSubscription, { ...searchForm, id: existingSubscription.subscriptions.length });
         } else {
-            await this.createSubscription(phoneNumber, subscription);
+            await this.createSubscription(phoneNumber, { ...searchForm, id: 0 });
         }
     }
+
+    async unsubscribe(phoneNumber: string, subscriptionId: number): Promise<void> {
+        await this.Context.initialize();
+        const existingSubscription = await this.Context.phoneSubscriptions()
+            .getByPhoneNumber(phoneNumber);
+
+        if (!existingSubscription) return;
+
+        existingSubscription.subscriptions = existingSubscription.subscriptions
+            .filter(x => x.id != subscriptionId);
+
+        if (existingSubscription.subscriptions.length === 0) {
+            await this.Context.phoneSubscriptions()
+                .delete(existingSubscription.id);
+        } else {
+            await this.Context.phoneSubscriptions()
+                .replace(existingSubscription);
+        }
+    };
 
     private async updateSubscription(existingSubscription: CosmosEntity<PhoneSubscription>, subscription: FlightPriceSubscription) {
         existingSubscription.subscriptions
@@ -62,7 +86,7 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
             return_to: subscription.return_from,
             locale: 'en',
             sort: 'price',
-            max_stopovers: subscription.non_stop && 0
+            max_stopovers: subscription.non_stop ? 0 : 1
         });
 
         return response.data.map((x): FlightDto => ({
@@ -79,7 +103,7 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
     }
 
     async searchLocations(searchTerm: string): Promise<LocationDto[]> {
-        const response = await FlightApi.locations.query({
+        const response = await this.FlightApi.locations.query({
             term: searchTerm,
             location_types: ['city', 'country', 'airport', 'subdivision'],
             limit: 50,
@@ -99,31 +123,40 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
     async dispatchPriceTrackers(): Promise<void> {
         await this.Context.initialize();
         const phoneSubscriptions = await this.Context.phoneSubscriptions().getAll();
-        phoneSubscriptions.forEach(this.trackPrice)
+        for (const phoneSubscription of phoneSubscriptions) {
+            await this.trackPrice(phoneSubscription);
+        }
     }
 
     private async trackPrice(phoneSubscription: PhoneSubscription): Promise<void> {
-        phoneSubscription.subscriptions
-            .forEach(async subscription => {
-                const flights = await this.searchFlights(subscription);
-                if (!flights || flights.length === 0) return;
-                await this.sendFlightNotifications(phoneSubscription.phoneNumber, subscription, flights);
-            });
+        for (const subscription of phoneSubscription.subscriptions) {
+            const flights = await this.searchFlights(subscription);
+            if (!flights || flights.length === 0) return;
+            await this.sendFlightNotifications(phoneSubscription.phoneNumber, subscription, flights);
+        }
     }
 
     async sendFlightNotifications(phoneNumber: string, subscription: FlightPriceSubscription, flights: FlightDto[], flightsToSend: number = 3) {
-        const linksToSend = flights.splice(0, flightsToSend).map(x => x.deepLink);
+        const linksToSend = await this.getShortenedFlightLinks(flights, flightsToSend);
         const message = `Heyo, Flight.Me here!
-            \nWe found some flights for ${subscription.fly_from} to ${subscription.fly_to} 
-            on dates DEPARTURE: ${subscription.date_from} RETURN: ${subscription.return_from}.
+            \nWe found some flights for ${subscription.fly_from} to ${subscription.fly_to} with dates
+            Departure: ${subscription.date_from}
+            Return: ${subscription.return_from}.
 
-            \n\nCheck them out!
+            \nCheck them out!
             ${linksToSend.join('\n\n')}
             `;
         await this.SmsService.sendMessage(phoneNumber, message)
     }
+
+    private async getShortenedFlightLinks(flights: FlightDto[], linksToShorten: number): Promise<string[]> {
+        const shortenedLinks: string[] = [];
+        for (const { deepLink } of flights.slice(0, linksToShorten)) {
+            const link = await this.UrlShortener.shorten(deepLink);
+            shortenedLinks.push(link)
+        }
+        return shortenedLinks;
+    }
 }
 
-export const FlightPriceTrackingService: IFlightPriceTrackingService = new FlightPriceTrackingServiceImpl(FlightMeContext, SmsService, FlightApi);
-
-
+export const FlightPriceTrackingService: IFlightPriceTrackingService = new FlightPriceTrackingServiceImpl(FlightMeContext, SmsService, FlightApi, UrlShortenerService);

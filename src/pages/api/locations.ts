@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { FlightApi } from '../../services/FlightApi';
+import { FlightApi } from '../../services/FlightApiService';
 import { FlightPriceTrackingService } from '../../services/FlightPriceTrackingService';
 
 export type LocationDto = {
