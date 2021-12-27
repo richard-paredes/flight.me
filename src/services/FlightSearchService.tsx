@@ -2,9 +2,7 @@ import React from 'react';
 
 import { Stringified } from "../types";
 import { FlightFormValues, TravelClassOption } from "../types/FlightSearch";
-
 import { LocationDto } from "../pages/api/locations";
-import { FlightDto } from '../pages/api/flights';
 
 import { DropdownOption } from '../components/DropdownOption';
 
@@ -16,7 +14,7 @@ interface IFlightSearchService {
     getFlightFormLabels: () => Stringified<Required<FlightFormValues>>;
     locationToString: (airport: LocationDto) => string;
     fetchLocations: (search: string) => Promise<LocationDto[]>;
-    submitSearch: (form: FlightFormValues) => Promise<void>;
+    submitSearch: (form: FlightFormValues) => Promise<boolean>;
 }
 
 class FlightSearchService implements IFlightSearchService {
@@ -98,13 +96,9 @@ class FlightSearchService implements IFlightSearchService {
         const data: LocationDto[] = await response.json();
         return data;
     };
-    submitSearch = async (form: FlightFormValues): Promise<void> => {
+    submitSearch = async (form: FlightFormValues): Promise<boolean> => {
         const response = await fetch('/api/subscriptions', { method: 'POST', body: JSON.stringify(form) });
-        if (response.status === 200) {
-            console.log('Successfully done!');
-        } else {
-            console.log('It failed ):');
-        }
+        return response.status === 200;
     };
 }
 

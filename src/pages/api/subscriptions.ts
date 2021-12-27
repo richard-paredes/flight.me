@@ -17,8 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             .getByPhoneNumber(phone_number);
 
         if (existingSubscription) {
-            console.log('Subscription exists');
-            console.log(existingSubscription);
             existingSubscription.subscriptions
                 .push(subscription);
             await AppContext.phoneSubscriptions()
@@ -31,12 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             await AppContext.phoneSubscriptions()
                 .create(phoneSubscription);
-
         }
         
         return res.status(200).json('OK');
     } catch (err) {
-        // console.error('Something went wrong.');
         console.error(err);
         return res.status(500).json('Error');
     }

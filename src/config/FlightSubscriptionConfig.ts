@@ -18,6 +18,6 @@ export const Configuration: IFlightMeContextConfiguration = {
     },
     container: {
         id: 'PhoneSubscriptions',
-        partitionKey: '/phonenumber'
+        partitionKey: '/phoneNumber'
     }
 };

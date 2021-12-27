@@ -1,19 +1,20 @@
 import { Container, ItemResponse, PartitionKeyDefinition, SqlQuerySpec } from "@azure/cosmos";
+import { CosmosEntity } from "../types/CosmosEntity";
 import { PhoneSubscription } from "../types/FlightPriceTracking/PhoneSubscription";
 
 export interface IPhoneSubscriptionsContainer {
     create: (phoneSubscription: PhoneSubscription) => Promise<ItemResponse<PhoneSubscription>>;
-    replace: (phoneSubscription: PhoneSubscription) => Promise<ItemResponse<PhoneSubscription>>;
-    delete: (phoneSubscriptionId: string) => Promise<ItemResponse<PhoneSubscription>>;
-    query: (query: string | SqlQuerySpec) => Promise<PhoneSubscription[]>;
-    getByPhoneNumber: (phoneNumber: string) => Promise<PhoneSubscription | null>;
+    replace: (phoneSubscription: CosmosEntity<PhoneSubscription>) => Promise<ItemResponse<PhoneSubscription>>;
+    delete: (phoneSubscriptionId: string) => Promise<ItemResponse<CosmosEntity<PhoneSubscription>>>;
+    query: (query: string | SqlQuerySpec) => Promise<CosmosEntity<PhoneSubscription>[]>;
+    getByPhoneNumber: (phoneNumber: string) => Promise<CosmosEntity<PhoneSubscription> | null>;
 }
 
 export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer {
-    private readonly PartitionKey: string | PartitionKeyDefinition;
-    private readonly Client: Container;
-    constructor(client: Container, partitionKey: string | PartitionKeyDefinition) {
-        this.Client = client;
+    private readonly PartitionKey: string;
+    private readonly Container: Container;
+    constructor(client: Container, partitionKey: string) {
+        this.Container = client;
         this.PartitionKey = partitionKey;
     }
 
@@ -21,13 +22,13 @@ export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer
      * Create item if it does not exist
      */
     async create(phoneSubscription: PhoneSubscription): Promise<ItemResponse<PhoneSubscription>> {
-        const response = await this.Client
+        const response = await this.Container
             .items
             .upsert<PhoneSubscription>(phoneSubscription)
         return response;
     }
 
-    async getByPhoneNumber(phoneNumber: string): Promise<PhoneSubscription | null> {
+    async getByPhoneNumber(phoneNumber: string): Promise<CosmosEntity<PhoneSubscription> | null> {
         const queryResult = await this.query({
             query: `
                 SELECT * FROM 
@@ -45,10 +46,10 @@ export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer
     /**
      * Query the container using SQL
      */
-    async query(query: string | SqlQuerySpec): Promise<PhoneSubscription[]> {
-        const { resources: results } = await this.Client
+    async query(query: string | SqlQuerySpec): Promise<CosmosEntity<PhoneSubscription>[]> {
+        const { resources: results } = await this.Container
             .items
-            .query<PhoneSubscription>(query)
+            .query<CosmosEntity<PhoneSubscription>>(query)
             .fetchAll();
         return results;
     }
@@ -56,9 +57,10 @@ export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer
     /**
      * Replace the item by ID.
      */
-    async replace(phoneSubscription: PhoneSubscription): Promise<ItemResponse<PhoneSubscription>> {
-        const response = await this.Client
-            .item(phoneSubscription.phoneNumber, this.PartitionKey)
+    async replace(phoneSubscription: CosmosEntity<PhoneSubscription>): Promise<ItemResponse<PhoneSubscription>> {
+        console.log('Replacing', phoneSubscription.id, 'using partition of ', phoneSubscription.phoneNumber);
+        const response = await this.Container
+            .item(phoneSubscription.id, phoneSubscription.phoneNumber)
             .replace(phoneSubscription);
         return response;
     }
@@ -66,10 +68,10 @@ export class PhoneSubscriptionsContainer implements IPhoneSubscriptionsContainer
     /**
      * Delete the item by ID.
      */
-    async delete(phoneSubscriptionId: string): Promise<ItemResponse<PhoneSubscription>> {
-        const response = await this.Client
+    async delete(phoneSubscriptionId: string): Promise<ItemResponse<CosmosEntity<PhoneSubscription>>> {
+        const response = await this.Container
             .item(phoneSubscriptionId, this.PartitionKey)
-            .delete<PhoneSubscription>();
+            .delete<CosmosEntity<PhoneSubscription>>();
         return response;
     }
 
