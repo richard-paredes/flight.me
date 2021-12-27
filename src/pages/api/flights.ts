@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IKiwiApi, KiwiApi } from '../../services/KiwiApiClient';
-import { FlightFormValues } from '../../types/FlightSearch';
+import { FlightPriceSubscription } from '../../types/FlightPriceTracking/FlightPriceSubscription';
 
 const kiwiApi: IKiwiApi = new KiwiApi(process.env.KIWI_API_URL, process.env.KIWI_API_TOKEN);
 
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404);
     }
 
-    const form = JSON.parse(req.body) as FlightFormValues;
+    const form = JSON.parse(req.body) as FlightPriceSubscription;
 
     const response = await kiwiApi.searches.search({
         ...form,

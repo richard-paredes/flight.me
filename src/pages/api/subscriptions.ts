@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { FlightFormValues } from '../../types/FlightSearch';
-import { AppContext } from '../../services/FlightMeContext'
+import { AppContext } from '../../services/FlightMeContext';
 import { PhoneSubscription } from '../../types/FlightPriceTracking/PhoneSubscription';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,6 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         return res.status(200).json('OK');
     } catch (err) {
+        console.log('Failed to add subscription');
         console.error(err);
         return res.status(500).json('Error');
     }

@@ -5,7 +5,7 @@ export interface TravelClassOption {
     value: typeof TravelClasses[number];
 }
 
-export interface FlightFormValues extends FlightPriceSubscription{
+export interface FlightFormValues extends FlightPriceSubscription {
     phone_number: string;
 }
 
