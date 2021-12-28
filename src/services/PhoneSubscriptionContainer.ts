@@ -5,19 +5,17 @@ import { PhoneSubscription } from "../types/FlightPriceTracking/PhoneSubscriptio
 export interface IPhoneSubscriptionsContainer {
     create: (phoneSubscription: PhoneSubscription) => Promise<ItemResponse<PhoneSubscription>>;
     replace: (phoneSubscription: CosmosEntity<PhoneSubscription>) => Promise<ItemResponse<PhoneSubscription>>;
-    delete: (phoneSubscriptionId: string) => Promise<ItemResponse<CosmosEntity<PhoneSubscription>>>;
+    delete: (phoneSubscription: CosmosEntity<PhoneSubscription>) => Promise<ItemResponse<PhoneSubscription>>;
     query: (query: string | SqlQuerySpec) => Promise<CosmosEntity<PhoneSubscription>[]>;
     getByPhoneNumber: (phoneNumber: string) => Promise<CosmosEntity<PhoneSubscription> | null>;
     getAll: () => Promise<CosmosEntity<PhoneSubscription>[]>;
 }
 
 export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsContainer {
-    private readonly PartitionKey: string;
     private readonly Container: Container;
 
-    constructor(client: Container, partitionKey: string) {
+    constructor(client: Container) {
         this.Container = client;
-        this.PartitionKey = partitionKey;
     }
 
     /**
@@ -81,9 +79,9 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
     /**
      * Delete the item by ID.
      */
-    async delete(phoneSubscriptionId: string): Promise<ItemResponse<CosmosEntity<PhoneSubscription>>> {
+    async delete(phoneSubscription: CosmosEntity<PhoneSubscription>): Promise<ItemResponse<CosmosEntity<PhoneSubscription>>> {
         const response = await this.Container
-            .item(phoneSubscriptionId, this.PartitionKey)
+            .item(phoneSubscription.id, phoneSubscription.phoneNumber)
             .delete<CosmosEntity<PhoneSubscription>>();
         return response;
     }

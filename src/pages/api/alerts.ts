@@ -19,7 +19,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.headers.authorization !== `Bearer ${process.env.CRON_API_TOKEN}`) {
-        console.log(req.headers.authorization);
         return res.status(401).json('Unauthorized');
     }
 
