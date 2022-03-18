@@ -9,6 +9,9 @@ export type FlightFormValues = FlightSearchForm & {
     phone_number: string;
 }
 
+/**
+ * Query parameters used by the Kiwi flights API
+ */
 export type FlightSearchForm = {
     fly_from: string;
     fly_to: string;

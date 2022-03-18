@@ -6,6 +6,9 @@ export interface ISmsService {
     sendMessage: (phone: string, message: string) => Promise<MessageInstance>;
 }
 
+/**
+ * Service used to send a SMS to a user's phone number
+ */
 class AppSmsService implements ISmsService {
     private readonly Client: TwilioClient;
     private readonly PhoneNumber: string;
@@ -15,6 +18,12 @@ class AppSmsService implements ISmsService {
         this.PhoneNumber = config.phoneNumber;
     }
 
+    /**
+     * Sends a SMS to the phone number
+     * @param phone Phone number used to notify the user
+     * @param message Message to send the user
+     * @returns MessageInstance containing metadata about the SMS sent
+     */
     async sendMessage(phone: string, message: string): Promise<MessageInstance> {
         const result = await this.Client.messages.create({
             from: this.PhoneNumber,

@@ -10,6 +10,9 @@ type Query = {
     [key: string]: number | number[] | string | string[] | boolean | boolean[];
 }
 
+/**
+ * Common helper utilities used for creating different API request types
+ */
 export class ApiUtilityService implements IApiUtilityService {
     private readonly API_BASE_URL: string;
 

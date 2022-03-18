@@ -3,6 +3,9 @@ import Yup from '../../extensions/yup';
 import { TravelClasses } from '../../types/FlightPriceTracking/FlightPriceSubscription';
 import { FlightFormValues } from '../../types/FlightSearch';
 
+/**
+ * Yup schema used to validate the search form
+ */
 export const FlightSearchValidationSchema: Yup.SchemaOf<FlightFormValues> = Yup.object().shape({ 
     phone_number: Yup.string()
         .phoneNumber('Invalid phone number')

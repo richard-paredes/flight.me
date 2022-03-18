@@ -11,6 +11,10 @@ export interface IPhoneSubscriptionsContainer {
     getAll: () => Promise<CosmosEntity<PhoneSubscription>[]>;
 }
 
+/**
+ * Used to interact with the CosmosDB store that holds
+ * the users' phone numbers & any flights they're subscribed to
+ */
 export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsContainer {
     private readonly Container: Container;
 
@@ -19,7 +23,8 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
     }
 
     /**
-     * Create item if it does not exist
+     * Creates a new PhoneSubscription item in the data store if 
+     * it does not exist already
      */
     async create(phoneSubscription: PhoneSubscription): Promise<ItemResponse<PhoneSubscription>> {
         const response = await this.Container
@@ -28,6 +33,10 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
         return response;
     }
 
+    /**
+     * Retrieves all the 
+     * @returns List of PhoneSubscription objects
+     */
     async getAll(): Promise<CosmosEntity<PhoneSubscription>[]> {
         const queryResult = await this.query({
             query: `
@@ -39,6 +48,11 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
         return queryResult;
     }
 
+    /**
+     * Retrieves a PhoneSubscription object for the given phone number
+     * @param phoneNumber The phone number of the PhoneSubscription being queried
+     * @returns PhoneSubscription or null if does not exist
+     */
     async getByPhoneNumber(phoneNumber: string): Promise<CosmosEntity<PhoneSubscription> | null> {
         const queryResult = await this.query({
             query: `
@@ -55,7 +69,9 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
     }
 
     /**
-     * Query the container using SQL
+     * Query the CosmosDB container using the provided SQL
+     * @param query Raw SQL string
+     * @returns List of PhoneSubscription objects
      */
     async query(query: string | SqlQuerySpec): Promise<CosmosEntity<PhoneSubscription>[]> {
         const { resources: results } = await this.Container
@@ -66,7 +82,9 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
     }
 
     /**
-     * Replace the item by ID.
+     * Replace the PhoneSubscription
+     * @param phoneSubscription PhoneSubscription to be modified
+     * @returns The replaced PhoneSubscription 
      */
     async replace(phoneSubscription: CosmosEntity<PhoneSubscription>): Promise<ItemResponse<PhoneSubscription>> {
         console.log('Replacing', phoneSubscription.id, 'using partition of ', phoneSubscription.phoneNumber);
@@ -77,7 +95,9 @@ export class PhoneSubscriptionsContainerImpl implements IPhoneSubscriptionsConta
     }
 
     /**
-     * Delete the item by ID.
+     * Hard deletes a PhoneSubscription
+     * @param phoneSubscription PhoneSubscription to be deleted
+     * @returns The deleted PhoneSubscription
      */
     async delete(phoneSubscription: CosmosEntity<PhoneSubscription>): Promise<ItemResponse<CosmosEntity<PhoneSubscription>>> {
         const response = await this.Container

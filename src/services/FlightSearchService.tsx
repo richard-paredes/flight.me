@@ -17,7 +17,15 @@ interface IFlightSearchService {
     submitSearch: (form: FlightFormValues) => Promise<boolean>;
 }
 
+/**
+ * Used to interact with the flight API to retrieve flights
+ * based on the search form
+ */
 class FlightSearchService implements IFlightSearchService {
+    /**
+     * The travel classes available to use with the flight API
+     * @returns Travel classes provided by the flight API
+     */
     getTravelClasses = (): TravelClassOption[] => {
         return [{
             label: "Economy",
@@ -40,6 +48,10 @@ class FlightSearchService implements IFlightSearchService {
             value: ""        
         }] as TravelClassOption[];
     };
+    /**
+     * Retrieves object with deafult values for the search form
+     * @returns Default values for the search form
+     */
     getDefaultFormValues = (): FlightFormValues => {
         const today = new Date();
         const tomorrow = new Date(today);
@@ -62,6 +74,10 @@ class FlightSearchService implements IFlightSearchService {
         };
         return defaultValues;
     };
+    /**
+     * Gets the labels displayed to user in the search form
+     * @returns Object containing corresponding labels for each search form property
+     */
     getFlightFormLabels = (): Stringified<Required<FlightFormValues>> => {
         return {
             phone_number: 'Phone Number',
@@ -79,6 +95,11 @@ class FlightSearchService implements IFlightSearchService {
             limit: "Limit results"
         };
     };
+    /**
+     * Retrieves a human-readable label based on a Location object
+     * @param location Location to be transformed into a label
+     * @returns A component displaying the location
+     */
     locationToLabel = (location: LocationDto): JSX.Element => {
         const name = this.locationToString(location);
         const sublabel = location.subdivisionName ? `${location.subdivisionName}, ${location.countryName}` 
@@ -86,9 +107,19 @@ class FlightSearchService implements IFlightSearchService {
 
         return <DropdownOption name={name} sublabel={sublabel} />;
     };
+    /**
+     * Gets the main information about the location as a string
+     * @param location The location to parse
+     * @returns A stringified representation of the location
+     */
     locationToString = (location?: LocationDto): string => {
         return location?.name;
     };
+    /**
+     * Returns potential list of locations for a given search term
+     * @param search The search term to query the flight locations API with
+     * @returns List of LocationDto from the flights API
+     */
     fetchLocations = async (search: string): Promise<LocationDto[]> => {
         if (!search) return [];
 

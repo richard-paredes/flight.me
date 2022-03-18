@@ -12,15 +12,26 @@ export interface IFlightApiService {
     }
 }
 
+/**
+ * Service used to interact with the Kiwi flights API
+ */
 class FlightApiServiceImpl implements IFlightApiService {
     private readonly API_TOKEN: string;
     private readonly ApiUtility: IApiUtilityService;
 
+    /**
+     * 
+     * @param config 
+     */
     constructor(config: IFlightApiServiceConfiguration) {
         this.ApiUtility = new ApiUtilityService(config.base_url);
         this.API_TOKEN = config.secret;
     }
 
+    /**
+     * Property used for fetching different origins and destinations
+     * to create a flight route
+     */
     readonly locations = {
         query: async (query: LocationQuery): Promise<LocationResult> => {
             const request = this.ApiUtility.buildGetRequest('/locations/query', query, { 'apikey': this.API_TOKEN });
@@ -41,6 +52,10 @@ class FlightApiServiceImpl implements IFlightApiService {
         }
     }
 
+    /**
+     * Property used for leveraging the search endpoint to return different
+     * flights for a given route
+     */
     readonly searches = {
         search: async (query: SearchQuery): Promise<SearchResult> => {
             const request = this.ApiUtility.buildGetRequest('/search', query, { 'apikey': this.API_TOKEN });

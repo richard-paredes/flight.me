@@ -19,6 +19,10 @@ export interface IFlightPriceTrackingService {
     dispatchPriceTrackers: () => Promise<void>;
 }
 
+/**
+ * Service containing logic for allowing users to subscribe to
+ * flight price alerts.
+ */
 export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingService {
     private readonly Context: IFlightMeContext;
     private readonly FlightApi: IFlightApiService;
@@ -39,6 +43,11 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         this.ApiUtility = apiUtility;
     }
 
+    /**
+     * Subscribes a user to receive alerts whenever the flight API responses satisfies the search form conditions
+     * @param phoneNumber Phone number used to notify the user
+     * @param searchForm Snapshot of the form used to query the API when enacting the subscription
+     */
     async subscribe(phoneNumber: string, searchForm: FlightSearchForm): Promise<void> {
         await this.Context.initialize();
         const existingSubscription = await this.Context.phoneSubscriptions()
@@ -51,6 +60,12 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         }
     }
 
+    /**
+     * Removes an existing subscription on a user
+     * @param phoneNumber Phone number used to notify the user
+     * @param subscriptionId The id of the subscription the user has
+     * @returns 
+     */
     async unsubscribe(phoneNumber: string, subscriptionId: number): Promise<void> {
         await this.Context.initialize();
         const existingSubscription = await this.Context.phoneSubscriptions()
@@ -70,6 +85,11 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         }
     };
 
+    /**
+     * Adds a new flight search subscription to an existing PhoneSubscription
+     * @param existingSubscription The existing PhoneSubscription
+     * @param subscription The flight search parameters to subscribe to
+     */
     private async updateSubscription(existingSubscription: CosmosEntity<PhoneSubscription>, subscription: FlightPriceSubscription) {
         existingSubscription.subscriptions
             .push(subscription);
@@ -77,6 +97,11 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
             .replace(existingSubscription);
     }
 
+    /**
+     * Creates a new PhoneSubscription, tying the phone number to a price tracking for given flight parameters
+     * @param phoneNumber The phone number used to notify the user
+     * @param subscription The flight search parameters to subscribe to
+     */
     private async createSubscription(phoneNumber: string, subscription: FlightPriceSubscription) {
         const phoneSubscription: PhoneSubscription = {
             phoneNumber: phoneNumber,
@@ -87,6 +112,11 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
             .create(phoneSubscription);
     }
 
+    /**
+     * Queries the flight API using a subscription's flight parameters
+     * @param subscription The flight search parameters to subscribe to
+     * @returns 
+     */
     async searchFlights(subscription: FlightPriceSubscription): Promise<FlightDto[]> {
         const response = await this.FlightApi.searches.search({
             ...subscription,
@@ -110,6 +140,11 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         }));
     }
 
+    /**
+     * Queries the flight API to look for flight locations
+     * @param searchTerm Searches for different locations a flight can be at
+     * @returns List of LocationDto describing potential results
+     */
     async searchLocations(searchTerm: string): Promise<LocationDto[]> {
         const response = await this.FlightApi.locations.query({
             term: searchTerm,
@@ -128,6 +163,10 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         );
     }
 
+    /**
+     * Iterates through all the existing subscriptions in the data store 
+     * and starts the user notification process if applicable
+     */
     async dispatchPriceTrackers(): Promise<void> {
         await this.Context.initialize();
         const phoneSubscriptions = await this.Context.phoneSubscriptions().getAll();
@@ -136,6 +175,12 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         }
     }
 
+    /**
+     * Iterates through all the flight search subscriptions tied to a phone number
+     * If the API has responses for any of the subscriptions, the user is notified
+     * @param phoneSubscription PhoneSubscription used to query the flight API
+     * @returns 
+     */
     private async trackPrice(phoneSubscription: PhoneSubscription): Promise<void> {
         for (const subscription of phoneSubscription.subscriptions) {
             const flights = await this.searchFlights(subscription);
@@ -144,6 +189,13 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         }
     }
 
+    /**
+     * Sends a message to the user's phone number about their subscription
+     * @param phoneNumber The phone number used to notify the user
+     * @param subscription The flight search parameters the user is subscribed to
+     * @param flights The flights that satisfy the subscription
+     * @param flightsToSend Number of flights to send the user as a preview
+     */
     async sendFlightNotifications(phoneNumber: string, subscription: FlightPriceSubscription, flights: FlightDto[], flightsToSend: number = 3) {
         const linksToSend = await this.getShortenedFlightLinks(flights, flightsToSend);
         const unsubscribeLink = await this.getUnsubscriptionLink(phoneNumber, subscription);
@@ -160,11 +212,23 @@ export class FlightPriceTrackingServiceImpl implements IFlightPriceTrackingServi
         await this.SmsService.sendMessage(phoneNumber, message)
     }
 
+    /**
+     * Generates a link used to unsubscribe the user from a subscription
+     * @param phoneNumber The phone number used to notify the user
+     * @param subscription The flight search parameters the user is subscribed to
+     * @returns A URL the user can use to unsubscribe to a subscription they have
+     */
     private async getUnsubscriptionLink(phoneNumber: string, subscription: FlightPriceSubscription): Promise<string> {
         const request = this.ApiUtility.buildGetRequest('/api/unsubscribe', { phone: phoneNumber, sid: subscription.id });
         return process.env.NODE_ENV === 'development' ? request.url : await this.UrlShortener.shorten(request.url);
     }
 
+    /**
+     * 
+     * @param flights The flights used to generate the shortened links
+     * @param linksToShorten The number of shorted links returned 
+     * @returns List of links, with length corresponding to `linksToShorten`
+     */
     private async getShortenedFlightLinks(flights: FlightDto[], linksToShorten: number): Promise<string[]> {
         const shortenedLinks: string[] = [];
         for (const { deepLink } of flights.slice(0, linksToShorten)) {
